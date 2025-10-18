@@ -1,0 +1,833 @@
+[
+  {
+    "id": "And",
+    "name": "Andromeda",
+    "nameJa": "アンドロメダ座",
+    "mythology": "エチオピア王妃カシオペアの娘。海獣の生贄にされるところをペルセウスに救われた",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Ant",
+    "name": "Antlia",
+    "nameJa": "ポンプ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Aps",
+    "name": "Apus",
+    "nameJa": "ふうちょう座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Aqr",
+    "name": "Aquarius",
+    "nameJa": "みずがめ座",
+    "mythology": "ゼウスに仕えて神々に水を注ぐ美少年ガニメデスの姿",
+    "season": "秋",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Aql",
+    "name": "Aquila",
+    "nameJa": "わし座",
+    "mythology": "ゼウスの使いの鷲。ガニメデスを天に運んだ",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Ara",
+    "name": "Ara",
+    "nameJa": "さいだん座",
+    "season": "夏",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Ari",
+    "name": "Aries",
+    "nameJa": "おひつじ座",
+    "mythology": "黄金の羊。プリクソスとヘレを救った",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Aur",
+    "name": "Auriga",
+    "nameJa": "ぎょしゃ座",
+    "mythology": "アテネ王エリクトニオス。戦車を発明した",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Boo",
+    "name": "Bootes",
+    "nameJa": "うしかい座",
+    "mythology": "大熊を追う狩人、または農夫",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Cae",
+    "name": "Caelum",
+    "nameJa": "ちょうこくぐ座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Cam",
+    "name": "Camelopardalis",
+    "nameJa": "きりん座",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Cnc",
+    "name": "Cancer",
+    "nameJa": "かに座",
+    "mythology": "ヘラクレスに踏みつぶされた蟹",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "CVn",
+    "name": "Canes Venatici",
+    "nameJa": "りょうけん座",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "CMa",
+    "name": "Canis Major",
+    "nameJa": "おおいぬ座",
+    "mythology": "オリオンの猟犬",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "CMi",
+    "name": "Canis Minor",
+    "nameJa": "こいぬ座",
+    "mythology": "オリオンの小さな猟犬",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Cap",
+    "name": "Capricornus",
+    "nameJa": "やぎ座",
+    "mythology": "山羊の姿をした牧神パン",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Car",
+    "name": "Carina",
+    "nameJa": "りゅうこつ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Cas",
+    "name": "Cassiopeia",
+    "nameJa": "カシオペヤ座",
+    "mythology": "エチオピア王妃。娘の美しさを自慢してポセイドンの怒りを買った",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Cen",
+    "name": "Centaurus",
+    "nameJa": "ケンタウルス座",
+    "mythology": "賢者ケイロン",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Cep",
+    "name": "Cepheus",
+    "nameJa": "ケフェウス座",
+    "mythology": "エチオピア王。カシオペアの夫",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Cet",
+    "name": "Cetus",
+    "nameJa": "くじら座",
+    "mythology": "アンドロメダを襲った海獣",
+    "season": "秋",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Cha",
+    "name": "Chamaeleon",
+    "nameJa": "カメレオン座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Cir",
+    "name": "Circinus",
+    "nameJa": "コンパス座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Col",
+    "name": "Columba",
+    "nameJa": "はと座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Com",
+    "name": "Coma Berenices",
+    "nameJa": "かみのけ座",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "CrA",
+    "name": "Corona Australis",
+    "nameJa": "みなみのかんむり座",
+    "season": "夏",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "CrB",
+    "name": "Corona Borealis",
+    "nameJa": "かんむり座",
+    "mythology": "アリアドネの冠",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Crv",
+    "name": "Corvus",
+    "nameJa": "からす座",
+    "mythology": "アポロンの使いの烏",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Crt",
+    "name": "Crater",
+    "nameJa": "コップ座",
+    "mythology": "アポロンの杯",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Cru",
+    "name": "Crux",
+    "nameJa": "みなみじゅうじ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Cyg",
+    "name": "Cygnus",
+    "nameJa": "はくちょう座",
+    "mythology": "ゼウスが白鳥に変身した姿",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Del",
+    "name": "Delphinus",
+    "nameJa": "いるか座",
+    "mythology": "アリオンを救った海豚",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Dor",
+    "name": "Dorado",
+    "nameJa": "かじき座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Dra",
+    "name": "Draco",
+    "nameJa": "りゅう座",
+    "mythology": "ヘスペリデスの園の黄金の林檎を守る竜",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Equ",
+    "name": "Equuleus",
+    "nameJa": "こうま座",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Eri",
+    "name": "Eridanus",
+    "nameJa": "エリダヌス座",
+    "mythology": "ポー川、または天の川",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "For",
+    "name": "Fornax",
+    "nameJa": "ろ座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Gem",
+    "name": "Gemini",
+    "nameJa": "ふたご座",
+    "mythology": "カストルとポルックスの双子",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Gru",
+    "name": "Grus",
+    "nameJa": "つる座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Her",
+    "name": "Hercules",
+    "nameJa": "ヘルクレス座",
+    "mythology": "12の難業を成し遂げた英雄",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Hor",
+    "name": "Horologium",
+    "nameJa": "とけい座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Hya",
+    "name": "Hydra",
+    "nameJa": "うみへび座",
+    "mythology": "ヘラクレスが退治した9つの頭を持つ怪物",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Hyi",
+    "name": "Hydrus",
+    "nameJa": "みずへび座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Ind",
+    "name": "Indus",
+    "nameJa": "インディアン座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Lac",
+    "name": "Lacerta",
+    "nameJa": "とかげ座",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Leo",
+    "name": "Leo",
+    "nameJa": "しし座",
+    "mythology": "ヘラクレスが退治したネメアのライオン",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "LMi",
+    "name": "Leo Minor",
+    "nameJa": "こじし座",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Lep",
+    "name": "Lepus",
+    "nameJa": "うさぎ座",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Lib",
+    "name": "Libra",
+    "nameJa": "てんびん座",
+    "mythology": "正義の女神アストレイアの天秤",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Lup",
+    "name": "Lupus",
+    "nameJa": "おおかみ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Lyn",
+    "name": "Lynx",
+    "nameJa": "やまねこ座",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Lyr",
+    "name": "Lyra",
+    "nameJa": "こと座",
+    "mythology": "オルフェウスの竪琴",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Men",
+    "name": "Mensa",
+    "nameJa": "テーブルさん座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Mic",
+    "name": "Microscopium",
+    "nameJa": "けんびきょう座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Mon",
+    "name": "Monoceros",
+    "nameJa": "いっかくじゅう座",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Mus",
+    "name": "Musca",
+    "nameJa": "はえ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Nor",
+    "name": "Norma",
+    "nameJa": "じょうぎ座",
+    "season": "夏",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Oct",
+    "name": "Octans",
+    "nameJa": "はちぶんぎ座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Oph",
+    "name": "Ophiuchus",
+    "nameJa": "へびつかい座",
+    "mythology": "医神アスクレピオス",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Ori",
+    "name": "Orion",
+    "nameJa": "オリオン座",
+    "mythology": "巨人の狩人。サソリに刺されて死んだ",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Pav",
+    "name": "Pavo",
+    "nameJa": "くじゃく座",
+    "season": "夏",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Peg",
+    "name": "Pegasus",
+    "nameJa": "ペガスス座",
+    "mythology": "翼を持つ天馬",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Per",
+    "name": "Perseus",
+    "nameJa": "ペルセウス座",
+    "mythology": "アンドロメダを救った英雄",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Phe",
+    "name": "Phoenix",
+    "nameJa": "ほうおう座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Pic",
+    "name": "Pictor",
+    "nameJa": "がか座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Psc",
+    "name": "Pisces",
+    "nameJa": "うお座",
+    "mythology": "アフロディーテとエロスが魚に変身した姿",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "PsA",
+    "name": "Piscis Austrinus",
+    "nameJa": "みなみのうお座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Pup",
+    "name": "Puppis",
+    "nameJa": "とも座",
+    "season": "冬",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Pyx",
+    "name": "Pyxis",
+    "nameJa": "らしんばん座",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Ret",
+    "name": "Reticulum",
+    "nameJa": "レチクル座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Sge",
+    "name": "Sagitta",
+    "nameJa": "や座",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Sgr",
+    "name": "Sagittarius",
+    "nameJa": "いて座",
+    "mythology": "ケンタウルスの射手",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Sco",
+    "name": "Scorpius",
+    "nameJa": "さそり座",
+    "mythology": "オリオンを刺したサソリ",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Scl",
+    "name": "Sculptor",
+    "nameJa": "ちょうこくしつ座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Sct",
+    "name": "Scutum",
+    "nameJa": "たて座",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Ser",
+    "name": "Serpens",
+    "nameJa": "へび座",
+    "mythology": "アスクレピオスの持つ蛇",
+    "season": "夏",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Sex",
+    "name": "Sextans",
+    "nameJa": "ろくぶんぎ座",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Tau",
+    "name": "Taurus",
+    "nameJa": "おうし座",
+    "mythology": "ゼウスが白い牡牛に変身した姿",
+    "season": "冬",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Tel",
+    "name": "Telescopium",
+    "nameJa": "ぼうえんきょう座",
+    "season": "夏",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Tri",
+    "name": "Triangulum",
+    "nameJa": "さんかく座",
+    "season": "秋",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "TrA",
+    "name": "Triangulum Australe",
+    "nameJa": "みなみのさんかく座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Tuc",
+    "name": "Tucana",
+    "nameJa": "きょしちょう座",
+    "season": "秋",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "UMa",
+    "name": "Ursa Major",
+    "nameJa": "おおぐま座",
+    "mythology": "ゼウスに愛されたカリストが熊に変えられた姿",
+    "season": "春",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "UMi",
+    "name": "Ursa Minor",
+    "nameJa": "こぐま座",
+    "mythology": "カリストの息子アルカスの姿",
+    "season": "通年",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Vel",
+    "name": "Vela",
+    "nameJa": "ほ座",
+    "season": "春",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "medium"
+  },
+  {
+    "id": "Vir",
+    "name": "Virgo",
+    "nameJa": "おとめ座",
+    "mythology": "正義の女神アストレイア、または農業の女神デメテル",
+    "season": "春",
+    "hemisphere": "both",
+    "mainStars": [],
+    "difficulty": "easy"
+  },
+  {
+    "id": "Vol",
+    "name": "Volans",
+    "nameJa": "とびうお座",
+    "season": "冬",
+    "hemisphere": "south",
+    "mainStars": [],
+    "difficulty": "hard"
+  },
+  {
+    "id": "Vul",
+    "name": "Vulpecula",
+    "nameJa": "こぎつね座",
+    "season": "夏",
+    "hemisphere": "north",
+    "mainStars": [],
+    "difficulty": "hard"
+  }
+]

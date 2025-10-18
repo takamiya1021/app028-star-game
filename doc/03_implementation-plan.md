@@ -47,10 +47,10 @@
 - ✅ public/data/stars.json作成（肉眼観測モード：7等まで、41,057個）
 - ✅ public/data/stars-10mag.json作成（天の川モード：9等まで、120,282個）
 
-**【】88星座データ準備**
-- IAU認定88星座リスト作成
-- 日本語名・神話・季節情報追加
-- ✅ public/data/constellations-sample.json作成（サンプル）
+**【✅】88星座データ準備**
+- ✅ IAU認定88星座リスト作成
+- ✅ 日本語名・神話・季節情報追加
+- ✅ public/data/constellations.json作成（88星座完全版）
 
 **【】星座線データ取得**
 - Stellarium constellationship.fab取得
