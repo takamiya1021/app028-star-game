@@ -31,7 +31,7 @@
 
 **【✅】サンプルテスト実行確認（Refactor）**
 - ✅ 簡単なテストケース作成して動作確認（5件全てパス）
-- ⏸ CI/CD連携準備（必要に応じて）
+- CI/CD連携準備
 
 ---
 
@@ -47,20 +47,20 @@
 - ✅ public/data/stars.json作成（肉眼観測モード：7等まで、41,057個）
 - ✅ public/data/stars-10mag.json作成（天の川モード：9等まで、120,282個）
 
-**【⏸】88星座データ準備**（後回し：クイズ機能実装時）
-- ⏸ IAU認定88星座リスト作成
-- ⏸ 日本語名・神話・季節情報追加
+**【】88星座データ準備**
+- IAU認定88星座リスト作成
+- 日本語名・神話・季節情報追加
 - ✅ public/data/constellations-sample.json作成（サンプル）
 
-**【⏸】星座線データ取得**（後回し：星座表示機能実装時）
-- ⏸ Stellarium constellationship.fab取得
-- ⏸ JSON形式への変換
-- ⏸ public/data/constellation-lines.json作成
+**【】星座線データ取得**
+- Stellarium constellationship.fab取得
+- JSON形式への変換
+- public/data/constellation-lines.json作成
 
-**【⏸】IAU固有名星データ準備**（後回し：クイズ機能実装時）
-- ⏸ IAU固有名リスト取得
-- ⏸ Hipparcos IDとマッピング
-- ⏸ public/data/named-stars.json作成
+**【】IAU固有名星データ準備**
+- IAU固有名リスト取得
+- Hipparcos IDとマッピング
+- public/data/named-stars.json作成
 
 ---
 
@@ -151,11 +151,11 @@
 - カスタムフック抽出（useStarField等）
 - すべてのテストがパスすることを確認
 
-#### 3-4: 星座線・グリッド描画（後回し）
-**【⏸】星座線描画テスト作成（Red）**（未着手）
+#### 3-4: 星座線・グリッド描画
+**【】星座線描画テスト作成（Red）**
 - `__tests__/lib/canvas/constellationRenderer.test.ts`
 
-**【⏸】星座線描画実装（Green）**（未着手）
+**【】星座線描画実装（Green）**
 - lib/canvas/constellationRenderer.ts
 
 **【✅】グリッド描画**
@@ -166,7 +166,7 @@
 ### Phase 4: クイズ機能実装（予定工数: 9時間）
 
 #### 4-1: クイズ生成ロジック（TDDサイクル）
-**【⏸】クイズ生成テスト作成（Red）**（未着手）
+**【】クイズ生成テスト作成（Red）**
 - `__tests__/lib/data/quizGenerator.test.ts` 作成
   - generateQuiz関数のテスト
   - 難易度別クイズ生成のテスト
@@ -175,71 +175,71 @@
   - ダミー選択肢の類似性テスト
   - 重複問題が生成されないことのテスト
 
-**【⏸】クイズ生成実装（Green）**（未着手）
+**【】クイズ生成実装（Green）**
 - lib/data/quizGenerator.ts
 - テストが通る最小限の実装
 
-**【⏸】クイズ生成リファクタリング（Refactor）**（未着手）
+**【】クイズ生成リファクタリング（Refactor）**
 - アルゴリズムの最適化
 - コードの可読性向上
 - すべてのテストがパスすることを確認
 
 #### 4-2: QuizContext（TDDサイクル）
-**【⏸】QuizContextテスト作成（Red）**（未着手）
+**【】QuizContextテスト作成（Red）**
 - `__tests__/context/QuizContext.test.tsx` 作成
   - クイズ状態管理のテスト
   - スコア更新のテスト
   - クイズ切り替えロジックのテスト
   - 回答処理のテスト
 
-**【⏸】QuizContext実装（Green）**（未着手）
+**【】QuizContext実装（Green）**
 - context/QuizContext.tsx
 - テストが通る最小限の実装
 
-**【⏸】QuizContextリファクタリング（Refactor）**（未着手）
+**【】QuizContextリファクタリング（Refactor）**
 - 状態管理の最適化
 - すべてのテストがパスすることを確認
 
 #### 4-3: SettingsContext（TDDサイクル）
-**【⏸】SettingsContextテスト作成（Red）**（未着手）
+**【】SettingsContextテスト作成（Red）**
 - `__tests__/context/SettingsContext.test.tsx` 作成
   - 設定状態管理のテスト
   - カテゴリー・難易度・出題数・音声設定のテスト
 
-**【⏸】SettingsContext実装（Green）**（未着手）
+**【】SettingsContext実装（Green）**
 - context/SettingsContext.tsx
 
-**【⏸】SettingsContextリファクタリング（Refactor）**（未着手）
+**【】SettingsContextリファクタリング（Refactor）**
 
 #### 4-4: クイズUIコンポーネント（TDDサイクル）
-**【⏸】QuizContainerテスト作成（Red）**（未着手）
+**【】QuizContainerテスト作成（Red）**
 - `__tests__/components/Quiz/QuizContainer.test.tsx`
   - クイズフロー制御のテスト
   - スコア管理のテスト
 
-**【⏸】QuizQuestionテスト作成（Red）**（未着手）
+**【】QuizQuestionテスト作成（Red）**
 - `__tests__/components/Quiz/QuizQuestion.test.tsx`
   - 問題文表示のテスト
   - 星空・イラスト表示のテスト
 
-**【⏸】QuizChoicesテスト作成（Red）**（未着手）
+**【】QuizChoicesテスト作成（Red）**
 - `__tests__/components/Quiz/QuizChoices.test.tsx`
   - 選択肢ボタン表示のテスト
   - 回答処理のテスト
   - 正解・不正解フィードバックのテスト
 
-**【⏸】QuizResultテスト作成（Red）**（未着手）
+**【】QuizResultテスト作成（Red）**
 - `__tests__/components/Quiz/QuizResult.test.tsx`
   - 結果表示のテスト
   - 「詳しく見る」ボタンのテスト
 
-**【⏸】クイズUIコンポーネント実装（Green）**（未着手）
+**【】クイズUIコンポーネント実装（Green）**
 - components/Quiz/QuizContainer.tsx
 - components/Quiz/QuizQuestion.tsx
 - components/Quiz/QuizChoices.tsx
 - components/Quiz/QuizResult.tsx
 
-**【⏸】クイズUIリファクタリング（Refactor）**（未着手）
+**【】クイズUIリファクタリング（Refactor）**
 - コンポーネント分割の最適化
 - すべてのテストがパスすることを確認
 
@@ -321,39 +321,39 @@
   - 観測モード切り替えのテスト
   - QuizContainer統合のテスト
 
-**【✅】トップページ実装（Green）**（一部実装済み）
+**【✅】トップページ実装（Green）**
 - ✅ app/page.tsx
 - ✅ StarField配置
 - ✅ 投影モード切り替えボタン
 - ✅ 観測モード切り替えボタン
 - ✅ 表示星数カウンター
-- ⏸ QuizContainer統合（未実装）
-- ⏸ ScoreDisplay配置（未実装）
+- QuizContainer統合
+- ScoreDisplay配置
 
 **【】トップページリファクタリング（Refactor）**
 
 #### 6-3: 設定画面（TDDサイクル）
-**【⏸】設定画面テスト作成（Red）**（未着手）
+**【】設定画面テスト作成（Red）**
 - `__tests__/app/settings/page.test.tsx`
   - ページレンダリングのテスト
   - SettingsPanel配置のテスト
 
-**【⏸】設定画面実装（Green）**（未着手）
+**【】設定画面実装（Green）**
 - app/settings/page.tsx
 
-**【⏸】設定画面リファクタリング（Refactor）**（未着手）
+**【】設定画面リファクタリング（Refactor）**
 
 #### 6-4: 図鑑モード（TDDサイクル）
-**【⏸】図鑑モードテスト作成（Red）**（未着手）
+**【】図鑑モードテスト作成（Red）**
 - `__tests__/app/encyclopedia/page.test.tsx`
   - ページレンダリングのテスト
   - 星座・星リスト表示のテスト
   - 詳細モーダル表示のテスト
 
-**【⏸】図鑑モード実装（Green）**（未着手）
+**【】図鑑モード実装（Green）**
 - app/encyclopedia/page.tsx
 
-**【⏸】図鑑モードリファクタリング（Refactor）**（未着手）
+**【】図鑑モードリファクタリング（Refactor）**
 
 ---
 
@@ -384,30 +384,30 @@
 ### Phase 8: アニメーション実装（予定工数: 4時間）
 
 #### 8-1: アニメーションテスト（TDDサイクル）
-**【⏸】アニメーションテスト作成（Red）**（未着手）
+**【】アニメーションテスト作成（Red）**
 - `__tests__/animations/transitions.test.tsx` 作成
   - フェードイン/アウトのテスト
   - スライドインのテスト
   - スケールアニメーションのテスト
   - ホバーエフェクトのテスト
 
-**【⏸】Framer Motionセットアップ（Green）**（未導入）
+**【】Framer Motionセットアップ（Green）**
 - パッケージインストール
 - 基本設定
 
-**【✅】星の瞬きアニメーション**（実装済み）
+**【✅】星の瞬きアニメーション**
 - ✅ 星空描画エンジンに統合（時間ベースの輝度変動）
 
-**【⏸】画面遷移アニメーション実装（Green）**（未実装）
+**【】画面遷移アニメーション実装（Green）**
 - フェードイン/アウト（問題切り替え）
 - スライドイン（モーダル表示）
 - スケール（スコア更新）
 
-**【✅】ホバー・クリックエフェクト**（実装済み）
+**【✅】ホバー・クリックエフェクト**
 - ✅ ボタンのインタラクション（Tailwind CSS transition使用）
-- ⏸ 星のハイライト（未実装）
+- 星のハイライト
 
-**【⏸】アニメーションリファクタリング（Refactor）**（未実施）
+**【】アニメーションリファクタリング（Refactor）**
 
 ---
 
@@ -420,25 +420,25 @@
   - メモリリークテスト
   - React再レンダリング検証テスト
 
-**【✅】描画最適化実装（Green）**（一部実装済み）
+**【✅】描画最適化実装（Green）**
 - ✅ 視野カリング実装
 - ✅ 等級フィルタリング
-- ⏸ LOD（Level of Detail）実装（部分的）
-- ⏸ デバウンス・スロットリング（未実装）
+- LOD（Level of Detail）実装
+- デバウンス・スロットリング
 
-**【🔶】React最適化実装（Green）**（部分的実装）
-- 🔶 React.memo、useMemo、useCallback適用（一部のみ）
-- 🔶 不要な再レンダリング削減（進行中）
+**【🔶】React最適化実装（Green）**
+- 🔶 React.memo、useMemo、useCallback適用
+- 🔶 不要な再レンダリング削減
 
-**【⏸】画像遅延読み込み実装（Green）**（未実装）
+**【】画像遅延読み込み実装（Green）**
 - lib/utils/imageLoader.ts
 - 星座イラストの遅延ロード
 - 次の問題のプリロード
 
 **【】パフォーマンスリファクタリング（Refactor）**
-- ⏸ Lighthouse監査実施
-- ⏸ パフォーマンススコア確認
-- ⏸ 改善点の特定と対応
+- Lighthouse監査実施
+- パフォーマンススコア確認
+- 改善点の特定と対応
 
 ---
 
@@ -468,35 +468,35 @@
 ### Phase 11: 最終調整・デプロイ準備（予定工数: 3時間）
 
 #### 11-1: エラーハンドリング（TDDサイクル）
-**【⏸】エラーハンドリングテスト作成（Red）**（未実装）
+**【】エラーハンドリングテスト作成（Red）**
 - `__tests__/error-handling/data-loading.test.ts` 作成
   - データロード失敗時の処理テスト
   - Canvas非対応ブラウザ対応テスト
   - ネットワークエラーハンドリングテスト
 
-**【⏸】エラーハンドリング実装（Green）**（未実装）
+**【】エラーハンドリング実装（Green）**
 - データロード失敗時の処理
 - Canvas非対応ブラウザ対応
 - エラーバウンダリ実装
 
-**【⏸】エラーハンドリングリファクタリング（Refactor）**（未実装）
+**【】エラーハンドリングリファクタリング（Refactor）**
 
 #### 11-2: ドキュメント・ビルド
-**【✅】README作成**（一部完了）
+**【✅】README作成**
 - ✅ プロジェクト説明（基本情報記載済み）
-- ⏸ セットアップ手順（詳細は未記載）
-- ⏸ 使用技術一覧（詳細は未記載）
-- ⏸ テスト実行方法
-- ⏸ デプロイ手順
+- セットアップ手順
+- 使用技術一覧
+- テスト実行方法
+- デプロイ手順
 
-**【⏸】ビルド確認**（未実施）
+**【】ビルド確認**
 - `npm run build` 成功確認
 - ビルドサイズ確認
 - 全テストパス確認
 
-**【⏸】デプロイ準備**（未実施）
+**【】デプロイ準備**
 - Vercel設定ファイル作成
-- 環境変数設定（必要に応じて）
+- 環境変数設定
 
 ---
 
