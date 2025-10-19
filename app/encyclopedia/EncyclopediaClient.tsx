@@ -7,6 +7,8 @@ import type { Constellation } from '@/types/constellation';
 import type { Star } from '@/types/star';
 import PageHeader from '@/components/Layout/PageHeader';
 import ConstellationModal from './ConstellationModal';
+import { PageTransition } from '@/components/Animate/PageTransition';
+import { FadeIn } from '@/components/Animate/FadeIn';
 
 interface EncyclopediaState {
   constellations: Constellation[];
@@ -90,14 +92,14 @@ export default function EncyclopediaClient() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-16 text-white">
+    <PageTransition className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-16 text-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
         <PageHeader
           eyebrow="Encyclopedia"
           title="星空図鑑"
           description="88 星座と主要な恒星の情報をチェックして、クイズで有利に進めよう。"
         >
-          <div className="mx-auto mt-3 flex w-full max-w-xl items-center overflow-hidden rounded-2xl border border-white/10 bg-black/40 px-4">
+          <FadeIn className="mx-auto mt-3 flex w-full max-w-xl items-center overflow-hidden rounded-2xl border border-white/10 bg-black/40 px-4" data-motion="fade-in-search">
             <span className="text-lg">🔍</span>
             <input
               type="search"
@@ -106,7 +108,7 @@ export default function EncyclopediaClient() {
               placeholder="星座名または英語名で検索"
               className="ml-3 w-full bg-transparent py-3 text-sm text-white placeholder:text-blue-200/60 focus:outline-none"
             />
-          </div>
+          </FadeIn>
         </PageHeader>
 
         {loading && (
@@ -163,6 +165,6 @@ export default function EncyclopediaClient() {
           onClose={closeModal}
         />
       )}
-    </main>
+    </PageTransition>
   );
 }

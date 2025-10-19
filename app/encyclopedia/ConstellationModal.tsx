@@ -3,6 +3,7 @@
 import ConstellationDetail from '@/components/DetailModal/ConstellationDetail';
 import StarDetail from '@/components/DetailModal/StarDetail';
 import { getStarDisplayName } from '@/components/DetailModal/detailUtils';
+import { FadeIn } from '@/components/Animate/FadeIn';
 import type { Constellation } from '@/types/constellation';
 import type { Star } from '@/types/star';
 
@@ -30,7 +31,11 @@ export default function ConstellationModal({
       aria-label={`${constellation.nameJa}の詳細情報`}
       className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 px-4 py-8"
     >
-      <div className="relative flex w-full max-w-4xl flex-col gap-6 overflow-y-auto rounded-3xl bg-slate-950/95 p-6 shadow-2xl backdrop-blur">
+      <FadeIn
+        as="section"
+        className="relative flex w-full max-w-4xl flex-col gap-6 overflow-y-auto rounded-3xl bg-slate-950/95 p-6 shadow-2xl backdrop-blur"
+        data-testid="constellation-modal"
+      >
         <button
           type="button"
           onClick={onClose}
@@ -70,7 +75,7 @@ export default function ConstellationModal({
         )}
 
         {activeStar && <StarDetail star={activeStar} constellation={constellation} />}
-      </div>
+      </FadeIn>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useSettings } from '@/context/SettingsContext';
 import QuizQuestion from './QuizQuestion';
 import QuizChoices from './QuizChoices';
 import QuizResult from './QuizResult';
+import { FadeIn } from '@/components/Animate/FadeIn';
 
 export function QuizContainer() {
   const { settings } = useSettings();
@@ -75,7 +76,10 @@ export function QuizContainer() {
   }, [loadQuiz, status]);
 
   return (
-    <div className="space-y-6 rounded-xl border border-white/10 bg-black/40 p-6 shadow-lg">
+    <FadeIn
+      className="space-y-6 rounded-xl border border-white/10 bg-black/40 p-6 shadow-lg"
+      data-testid="quiz-container"
+    >
       <header className="flex items-baseline justify-between text-white">
         <h2 className="text-xl font-bold">星空クイズ</h2>
         <div className="text-sm text-blue-200">
@@ -106,7 +110,7 @@ export function QuizContainer() {
       )}
 
       <QuizResult result={lastResult} onNext={handleNextQuiz} />
-    </div>
+    </FadeIn>
   );
 }
 

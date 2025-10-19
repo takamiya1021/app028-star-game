@@ -15,6 +15,8 @@ import QuizContainer from '@/components/Quiz/QuizContainer';
 import ScoreDisplay from '@/components/Score/ScoreDisplay';
 import { useQuiz } from '@/context/QuizContext';
 import { useBreakpoint } from '@/lib/ui/useBreakpoint';
+import { PageTransition } from '@/components/Animate/PageTransition';
+import { FadeIn } from '@/components/Animate/FadeIn';
 
 export default function Home() {
   const [visibleStarCount, setVisibleStarCount] = useState(0);
@@ -90,7 +92,7 @@ export default function Home() {
   }, [history]);
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-black via-slate-900 to-indigo-950">
+    <PageTransition className="h-screen w-full overflow-hidden bg-gradient-to-br from-black via-slate-900 to-indigo-950">
       <StarField
         stars={stars}
         viewCenter={{ ra: 90, dec: 0 }}
@@ -101,12 +103,12 @@ export default function Home() {
       />
 
       <header className="pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4">
-        <div className="pointer-events-auto rounded-2xl bg-black/40 px-4 py-2 text-center text-white shadow-lg backdrop-blur">
+        <FadeIn className="pointer-events-auto rounded-2xl bg-black/40 px-4 py-2 text-center text-white shadow-lg backdrop-blur" data-motion="fade-in-header">
           <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">✨ Stellarium Quiz ✨</h1>
           <p className="mt-1 text-xs text-blue-100 sm:text-sm">
             星々の海を旅しながらクイズに挑戦しよう
           </p>
-        </div>
+        </FadeIn>
       </header>
 
       <aside className="pointer-events-auto absolute right-6 top-28 hidden w-full max-w-sm flex-col gap-4 rounded-3xl bg-black/50 p-5 text-white shadow-2xl backdrop-blur-lg xl:flex">
@@ -127,7 +129,7 @@ export default function Home() {
           aria-modal="true"
           aria-label="クイズパネル"
         >
-          <div id="mobile-quiz-panel" className="w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900/95 shadow-2xl backdrop-blur">
+          <FadeIn as="div" id="mobile-quiz-panel" className="w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900/95 shadow-2xl backdrop-blur">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-white">
               <h2 className="text-lg font-semibold">星空クイズ</h2>
               <button
@@ -145,7 +147,7 @@ export default function Home() {
                 <QuizContainer />
               </div>
             </div>
-          </div>
+          </FadeIn>
         </div>
       )}
 
@@ -203,6 +205,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </main>
+    </PageTransition>
   );
 }

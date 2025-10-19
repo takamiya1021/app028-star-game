@@ -59,4 +59,25 @@ describe('SettingsContext', () => {
       soundEnabled: true,
     });
   });
+
+  it('ignores invalid updates to constrained fields', () => {
+    const { result } = renderHook(() => useSettings(), { wrapper });
+
+    act(() => {
+      result.current.updateSettings({
+        // @ts-expect-error intentional invalid value for test
+        category: 'galactic',
+        // @ts-expect-error intentional invalid value for test
+        difficulty: 'legendary',
+        // @ts-expect-error intentional invalid value for test
+        questionCount: 5,
+      });
+    });
+
+    expect(result.current.settings).toMatchObject({
+      category: 'all',
+      difficulty: 'medium',
+      questionCount: 10,
+    });
+  });
 });

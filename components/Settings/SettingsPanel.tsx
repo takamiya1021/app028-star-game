@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSettings } from '@/context/SettingsContext';
+import { FadeIn } from '@/components/Animate/FadeIn';
 
 const CATEGORY_OPTIONS = [
   { value: 'all' as const, label: '全天' },
@@ -52,7 +53,7 @@ export function SettingsPanel() {
   );
 
   return (
-    <section className="space-y-6 rounded-xl border border-white/10 bg-black/50 p-6 text-white shadow-lg">
+    <FadeIn as="section" className="space-y-6 rounded-xl border border-white/10 bg-black/50 p-6 text-white shadow-lg" data-motion="fade-in-settings">
       <header>
         <h2 className="text-xl font-bold">クイズ設定</h2>
         <p className="text-sm text-blue-200">好みに合わせて出題内容を調整できます。</p>
@@ -128,7 +129,7 @@ export function SettingsPanel() {
           初期設定に戻す
         </button>
       </div>
-    </section>
+    </FadeIn>
   );
 }
 

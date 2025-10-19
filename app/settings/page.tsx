@@ -1,4 +1,5 @@
 import SettingsPanel from '@/components/Settings/SettingsPanel';
+import { PageTransition } from '@/components/Animate/PageTransition';
 import PageHeader from '@/components/Layout/PageHeader';
 
 export const metadata = {
@@ -8,7 +9,7 @@ export const metadata = {
 
 export default function SettingsPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-16 text-white">
+    <PageTransition className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-16 text-white">
       <div className="mx-auto flex max-w-5xl flex-col gap-10">
         <PageHeader
           eyebrow="Settings"
@@ -20,6 +21,6 @@ export default function SettingsPage() {
           <SettingsPanel />
         </section>
       </div>
-    </main>
+    </PageTransition>
   );
 }
