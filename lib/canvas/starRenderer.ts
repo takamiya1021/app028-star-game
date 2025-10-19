@@ -274,10 +274,31 @@ function applyLevelOfDetail(stars: Star[], zoom: number): Star[] {
   if (stars.length <= threshold) {
     return stars;
   }
-  const step = Math.ceil(stars.length / threshold);
-  const sampled: Star[] = [];
-  for (let i = 0; i < stars.length; i += step) {
-    sampled.push(stars[i]);
+
+  const brightQuota = Math.floor(threshold * 0.6);
+  const brightCandidates = stars
+    .filter((star) => star.vmag !== null)
+    .sort((a, b) => (a.vmag ?? 99) - (b.vmag ?? 99));
+
+  const selected: Star[] = brightCandidates.slice(0, Math.min(brightQuota, brightCandidates.length));
+  const selectedIds = new Set(selected.map((star) => star.id));
+
+  const remaining: Star[] = [];
+  for (const star of stars) {
+    if (!selectedIds.has(star.id)) {
+      remaining.push(star);
+    }
   }
-  return sampled;
+
+  const slotsLeft = threshold - selected.length;
+  if (slotsLeft <= 0) {
+    return selected;
+  }
+
+  const step = Math.max(1, Math.floor(remaining.length / slotsLeft));
+  for (let i = 0; i < remaining.length && selected.length < threshold; i += step) {
+    selected.push(remaining[i]);
+  }
+
+  return selected;
 }
