@@ -34,4 +34,11 @@ describe('QuizChoices', () => {
     const otherButton = screen.getByText('A');
     expect(otherButton).not.toHaveClass('bg-blue-500/20');
   });
+
+  it('attaches motion attributes', () => {
+    const onSelect = jest.fn();
+    render(<QuizChoices choices={choices} onSelect={onSelect} />);
+    const button = screen.getByTestId('choice-A');
+    expect(button).toHaveAttribute('data-motion', 'choice');
+  });
 });
