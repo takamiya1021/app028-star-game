@@ -10,7 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=./.ms-playwright playwright test"
   },
   "dependencies": {
     "framer-motion": "^12.23.24",

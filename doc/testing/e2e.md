@@ -15,6 +15,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
+- `PLAYWRIGHT_BROWSERS_PATH=./.ms-playwright` をスクリプト内で指定しているため、ブラウザはプロジェクト直下に展開されます。
 - `playwright.config.ts` で Next.js dev サーバをポート 3001 で自動起動します。
 - テストは `tests/e2e/*.spec.ts` に配置します。
 - 失敗したテストでは trace / screenshot / video を `playwright-report/` に保存します。
