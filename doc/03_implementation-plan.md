@@ -487,7 +487,10 @@
 ### Phase 10: E2Eテスト実装（予定工数: 3時間）
 
 #### 10-1: E2Eテストセットアップ
-**【】Playwright/Cypressセットアップ**
+**【✅】Playwright/Cypressセットアップ**
+- ✅ `@playwright/test` 導入・基本設定 (`playwright.config.ts`)
+- ✅ `tests/e2e/home.spec.ts` でホーム画面スモークテスト追加
+- ⚠️ ブラウザ取得は `~/.cache/ms-playwright` の所有権修正後に `npx playwright install chromium`
 - パッケージインストール
 - 設定ファイル作成
 
