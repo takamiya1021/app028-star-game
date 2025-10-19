@@ -1,4 +1,4 @@
-import { render, fireEvent, act } from '@testing-library/react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react';
 import StarField from '@/components/StarField/StarField';
 import type { Star } from '@/types/star';
 
@@ -148,5 +148,19 @@ describe('StarField component', () => {
     const modeAfter = mockDrawStars.mock.calls.at(-1)?.[7];
     expect(modeAfter).toEqual('stereographic');
     expect(modeAfter).not.toEqual(initialMode);
+  });
+
+  it('calls support change callback when canvas context is unavailable', async () => {
+    const getContextMock = HTMLCanvasElement.prototype.getContext as jest.Mock;
+    getContextMock.mockReturnValueOnce(null);
+    const handleSupportChange = jest.fn();
+
+    render(<StarField stars={stars} onCanvasSupportChange={handleSupportChange} />, {
+      container: document.getElementById('root')!,
+    });
+
+    await waitFor(() => {
+      expect(handleSupportChange).toHaveBeenCalledWith(false);
+    });
   });
 });

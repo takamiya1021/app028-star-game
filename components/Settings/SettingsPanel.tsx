@@ -1,7 +1,11 @@
+'use client';
+
+'use client';
+
 import { useCallback } from 'react';
 import { useSettings } from '@/context/SettingsContext';
 import { FadeIn } from '@/components/Animate/FadeIn';
-
+import type { Settings } from '@/types/quiz';
 const CATEGORY_OPTIONS = [
   { value: 'all' as const, label: '全天' },
   { value: 'north' as const, label: '北天' },
@@ -24,26 +28,17 @@ const QUESTION_COUNT_OPTIONS = [
 export function SettingsPanel() {
   const { settings, updateSettings, resetSettings } = useSettings();
 
-  const handleCategoryChange = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updateSettings({ category: event.target.value as typeof settings.category });
-    },
-    [updateSettings]
-  );
+  const handleCategoryChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    updateSettings({ category: event.target.value as Settings['category'] });
+  }, [updateSettings]);
 
-  const handleDifficultyChange = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updateSettings({ difficulty: event.target.value as typeof settings.difficulty });
-    },
-    [updateSettings]
-  );
+  const handleDifficultyChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    updateSettings({ difficulty: event.target.value as Settings['difficulty'] });
+  }, [updateSettings]);
 
-  const handleQuestionCountChange = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      updateSettings({ questionCount: Number(event.target.value) as typeof settings.questionCount });
-    },
-    [updateSettings]
-  );
+  const handleQuestionCountChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    updateSettings({ questionCount: Number(event.target.value) as Settings['questionCount'] });
+  }, [updateSettings]);
 
   const handleSoundToggle = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,4 +129,3 @@ export function SettingsPanel() {
 }
 
 export default SettingsPanel;
-'use client';

@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { HTMLAttributes } from 'react';
+import type { HTMLMotionProps } from 'framer-motion';
 import { mergeClassNames } from '@/lib/ui/breakpoints';
 import { motionDurations, motionEasing } from '@/lib/ui/motion';
 
-interface PageTransitionProps extends HTMLAttributes<HTMLElement> {
+interface PageTransitionProps extends HTMLMotionProps<'div'> {
   as?: 'main' | 'div';
 }
 

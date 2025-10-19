@@ -93,7 +93,7 @@ function getLocalSiderealTime(date: Date, longitude: number): number {
   const t = (jd - 2451545.0) / 36525.0;
 
   // グリニッジ恒星時（度）
-  let gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) +
+  const gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) +
             t * t * (0.000387933 - t / 38710000.0);
 
   // 地方恒星時 = グリニッジ恒星時 + 経度
@@ -166,8 +166,9 @@ export function celestialToScreen(
   canvasWidth: number,
   canvasHeight: number,
   projectionMode: ProjectionMode = 'orthographic',
-  observer?: ObserverLocation
+  _observer?: ObserverLocation
 ): { x: number; y: number } | null {
+  void _observer;
   if (projectionMode === 'stereographic') {
     return celestialToScreenStereographic(ra, dec, viewCenter, zoom, canvasWidth, canvasHeight);
   } else {

@@ -1,10 +1,10 @@
 'use client';
 
 import { motion, Variants } from 'framer-motion';
-import type { HTMLAttributes } from 'react';
+import type { HTMLMotionProps } from 'framer-motion';
 import { mergeClassNames } from '@/lib/ui/breakpoints';
 
-interface StaggerContainerProps extends HTMLAttributes<HTMLDivElement> {
+interface StaggerContainerProps extends HTMLMotionProps<'div'> {
   delayChildren?: number;
   staggerChildren?: number;
 }

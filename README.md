@@ -18,15 +18,16 @@
 
 ## セットアップ
 ```bash
-pnpm install
-pnpm dev
+cp .env.example .env.local
+npm install
+npm run dev
 ```
-ブラウザで http://localhost:3000 を開けば開発サーバーが動作します。
+ブラウザで http://localhost:3000 を開けば開発サーバーが動作します。`.env.local` には公開設定値（例: `NEXT_PUBLIC_APP_NAME`）を定義できます。
 
 ## テスト
 Canvas まわりの主要テストはモックと動的 import を組み合わせて実行します。
 ```bash
-pnpm test -- --runTestsByPath \
+npm test -- --runTestsByPath \
   __tests__/lib/data/starsLoader.test.ts \
   __tests__/lib/data/constellationsLoader.test.ts \
   __tests__/lib/data/constellationLinesLoader.test.ts \
@@ -36,6 +37,11 @@ pnpm test -- --runTestsByPath \
   __tests__/lib/canvas/constellationRenderer.test.ts
 ```
 各種テストの詳細やメンテ手順は `doc/maintenance/` を参照してください。
+
+全テストをまとめて実行する場合は以下を利用します。
+```bash
+npm test -- --runInBand
+```
 
 ## データ再生成
 Hipparcos データを更新したい場合は以下を実行します。
@@ -47,10 +53,10 @@ pnpm tsx scripts/rebuild_stars_from_csv.py
 ## デプロイ
 Vercel CLI を利用してデプロイしています。
 ```bash
-pnpm run build
+npm run build
 npx vercel --prod --yes
 ```
-最新のデプロイ履歴や URL は Vercel プロジェクト画面で確認できます。
+ビルド設定は `vercel.json` に定義しています。最新のデプロイ履歴や URL は Vercel プロジェクト画面で確認できます。
 
 ## ライセンス
 データソースのライセンスに従って利用してください。アプリケーションコードは MIT ライセンスを予定しています。

@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo } from 'react';
 import type { Constellation } from '@/types/constellation';
 import type { Star } from '@/types/star';
@@ -89,4 +91,3 @@ export function StarDetail({ star, constellation }: StarDetailProps) {
 }
 
 export default StarDetail;
-'use client';

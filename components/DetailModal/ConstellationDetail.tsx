@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo } from 'react';
 import Image from 'next/image';
 import type { Constellation } from '@/types/constellation';
@@ -112,4 +114,3 @@ export function ConstellationDetail({ constellation, stars }: ConstellationDetai
 }
 
 export default ConstellationDetail;
-'use client';

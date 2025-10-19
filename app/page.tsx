@@ -18,6 +18,8 @@ import { useBreakpoint } from '@/lib/ui/useBreakpoint';
 import { PageTransition } from '@/components/Animate/PageTransition';
 import { FadeIn } from '@/components/Animate/FadeIn';
 
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Stellarium Quiz';
+
 export default function Home() {
   const [visibleStarCount, setVisibleStarCount] = useState(0);
   const [projectionMode, setProjectionMode] = useState<ProjectionMode>('orthographic');
@@ -26,6 +28,7 @@ export default function Home() {
   const [isMobileQuizOpen, setMobileQuizOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  const [isCanvasSupported, setCanvasSupported] = useState(true);
 
   const { correctCount, totalCount, history } = useQuiz();
   const breakpoint = useBreakpoint();
@@ -80,6 +83,13 @@ export default function Home() {
     setLoadAttempt((prev) => prev + 1);
   }, []);
 
+  const handleCanvasSupportChange = useCallback((supported: boolean) => {
+    setCanvasSupported(supported);
+    if (!supported) {
+      setVisibleStarCount(0);
+    }
+  }, []);
+
   useEffect(() => {
     if (breakpoint !== 'sm') {
       setMobileQuizOpen(false);
@@ -112,11 +122,12 @@ export default function Home() {
         className="h-full w-full"
         onVisibleCountChange={setVisibleStarCount}
         projectionMode={projectionMode}
+        onCanvasSupportChange={handleCanvasSupportChange}
       />
 
       <header className="pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4">
         <FadeIn className="pointer-events-auto rounded-2xl bg-black/40 px-4 py-2 text-center text-white shadow-lg backdrop-blur" data-motion="fade-in-header">
-          <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">✨ Stellarium Quiz ✨</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">✨ {APP_NAME} ✨</h1>
           <p className="mt-1 text-xs text-blue-100 sm:text-sm">
             星々の海を旅しながらクイズに挑戦しよう
           </p>
@@ -136,6 +147,16 @@ export default function Home() {
           >
             再読み込み
           </button>
+        </div>
+      )}
+
+      {!isCanvasSupported && (
+        <div
+          role="alert"
+          className="pointer-events-auto absolute left-1/2 top-44 flex w-[90%] max-w-xl -translate-x-1/2 flex-col items-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-500/20 px-4 py-3 text-center text-sm text-amber-50 shadow-lg backdrop-blur"
+        >
+          <p className="font-semibold">お使いのブラウザではCanvasがサポートされていません。</p>
+          <p className="text-xs text-amber-100">最新のブラウザに更新するか、別のデバイスで再度お試しください。</p>
         </div>
       )}
 

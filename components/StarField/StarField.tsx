@@ -12,6 +12,7 @@ interface StarFieldProps {
   className?: string;
   onVisibleCountChange?: (count: number) => void;
   projectionMode?: ProjectionMode;
+  onCanvasSupportChange?: (supported: boolean) => void;
 }
 
 // 東京の位置と観測日時（2025年1月1日 00:00:00 JST = 2024年12月31日 15:00:00 UTC）
@@ -36,6 +37,7 @@ export default function StarField({
   className = '',
   onVisibleCountChange,
   projectionMode = 'orthographic',
+  onCanvasSupportChange,
 }: StarFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -50,6 +52,7 @@ export default function StarField({
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
   const zoomRef = useRef(initialZoom);
   const projectionModeRef = useRef(projectionMode);
+  const canvasSupportRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     zoomRef.current = zoom;
@@ -238,7 +241,7 @@ export default function StarField({
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [setViewCenterThrottled]);
 
   // 星空アニメーション
   useEffect(() => {
@@ -246,7 +249,18 @@ export default function StarField({
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      if (canvasSupportRef.current !== false) {
+        canvasSupportRef.current = false;
+        onCanvasSupportChange?.(false);
+      }
+      return;
+    }
+
+    if (canvasSupportRef.current !== true) {
+      canvasSupportRef.current = true;
+      onCanvasSupportChange?.(true);
+    }
 
     const startTime = Date.now();
 
@@ -286,7 +300,7 @@ export default function StarField({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [stars, viewCenter, zoom, canvasSize, projectionMode, onVisibleCountChange]);
+  }, [stars, viewCenter, zoom, canvasSize, projectionMode, onVisibleCountChange, onCanvasSupportChange]);
 
   return (
     <canvas

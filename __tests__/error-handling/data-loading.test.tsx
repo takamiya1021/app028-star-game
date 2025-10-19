@@ -1,20 +1,34 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useEffect } from 'react';
 import Home from '@/app/page';
 import Providers from '@/app/providers';
 import { loadStars } from '@/lib/data/starsLoader';
 
 jest.mock('@/lib/data/starsLoader');
-jest.mock('@/components/StarField/StarField', () => ({ stars }: { stars: unknown[] }) => (
-  <div data-testid="mock-starfield" data-count={stars.length} />
-));
+const starFieldMock = jest.fn();
+jest.mock('@/components/StarField/StarField', () => ({
+  __esModule: true,
+  default: (props: unknown) => starFieldMock(props),
+}));
 jest.mock('@/components/Quiz/QuizContainer', () => () => <div data-testid="mock-quiz" />);
 jest.mock('@/components/Score/ScoreDisplay', () => () => <div data-testid="mock-score" />);
 
 const mockedLoadStars = loadStars as jest.MockedFunction<typeof loadStars>;
 
 describe('Home page star data loading', () => {
+  let consoleErrorSpy: jest.SpyInstance;
+
   beforeEach(() => {
     mockedLoadStars.mockReset();
+    starFieldMock.mockReset();
+    starFieldMock.mockImplementation(({ stars }: { stars?: unknown[] }) => (
+      <div data-testid="mock-starfield" data-count={stars?.length ?? 0} />
+    ));
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleErrorSpy?.mockRestore();
   });
 
   it('displays an error message and allows retry when loading fails', async () => {
@@ -47,5 +61,24 @@ describe('Home page star data loading', () => {
 
     await waitFor(() => expect(mockedLoadStars).toHaveBeenCalled());
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows a guidance message when Canvas is not supported', async () => {
+    mockedLoadStars.mockResolvedValue([]);
+    starFieldMock.mockImplementation(({ onCanvasSupportChange }: { onCanvasSupportChange?: (supported: boolean) => void }) => {
+      useEffect(() => {
+        onCanvasSupportChange?.(false);
+      }, [onCanvasSupportChange]);
+      return <div data-testid="mock-starfield" />;
+    });
+
+    render(
+      <Providers>
+        <Home />
+      </Providers>
+    );
+
+    expect(await screen.findByText('お使いのブラウザではCanvasがサポートされていません。')).toBeInTheDocument();
+    expect(screen.getByText('最新のブラウザに更新するか、別のデバイスで再度お試しください。')).toBeInTheDocument();
   });
 });

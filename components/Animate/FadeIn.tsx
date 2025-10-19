@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import type { HTMLAttributes } from 'react';
+import type { HTMLMotionProps } from 'framer-motion';
 import { motionDurations, motionEasing } from '@/lib/ui/motion';
 
 type FadeInElement = 'div' | 'section' | 'article' | 'aside';
@@ -13,7 +13,7 @@ const componentMap: Record<FadeInElement, typeof motion.div> = {
   aside: motion.aside,
 };
 
-interface FadeInProps extends HTMLAttributes<HTMLElement> {
+interface FadeInProps extends HTMLMotionProps<'div'> {
   delay?: number;
   duration?: number;
   as?: FadeInElement;
