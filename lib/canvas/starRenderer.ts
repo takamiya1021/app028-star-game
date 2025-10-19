@@ -9,8 +9,6 @@ import {
 import { getDrawStarsObserver, now as perfNow } from '@/performance/drawStarsObserver';
 import { drawCelestialGrid } from './gridRenderer';
 
-const BAYER_PATTERN = /Alp|Bet|Gam|Del|Eps|Zet|Eta|The|Iot|Kap|Lam|Mu |Nu |Xi |Omi|Pi |Rho|Sig|Tau|Ups|Phi|Chi|Psi|Ome/;
-
 const BAYER_TO_GREEK: Record<string, string> = {
   Alp: 'α', Bet: 'β', Gam: 'γ', Del: 'δ',
   Eps: 'ε', Zet: 'ζ', Eta: 'η', The: 'θ',
@@ -20,35 +18,23 @@ const BAYER_TO_GREEK: Record<string, string> = {
   Phi: 'φ', Chi: 'χ', Psi: 'ψ', Ome: 'ω',
 };
 
-const starLabelCache = new Map<number, string | null>();
-
-function deriveStarLabel(star: Star): string | null {
-  if (star.vmag == null || star.vmag > 3.0) {
-    return null;
-  }
-
-  if (star.properName) {
-    return star.properName;
-  }
-
-  if (star.name && BAYER_PATTERN.test(star.name)) {
-    for (const [abbr, greek] of Object.entries(BAYER_TO_GREEK)) {
-      if (star.name.includes(abbr)) {
-        return greek;
-      }
-    }
-  }
-
-  return null;
+interface LabelOptions {
+  showProperNames: boolean;
+  showBayerDesignations: boolean;
 }
 
-function getStarLabel(star: Star): string | null {
-  if (starLabelCache.has(star.id)) {
-    return starLabelCache.get(star.id) ?? null;
+function isLabelEligible(star: Star): boolean {
+  return star.vmag !== null && star.vmag <= 3.0;
+}
+
+function deriveBayerLabel(star: Star): string | null {
+  if (!star.name) return null;
+  for (const [abbr, greek] of Object.entries(BAYER_TO_GREEK)) {
+    if (star.name.includes(abbr)) {
+      return greek;
+    }
   }
-  const label = deriveStarLabel(star);
-  starLabelCache.set(star.id, label);
-  return label;
+  return null;
 }
 /**
  * B-V色指数から星の色を計算
@@ -62,6 +48,16 @@ function bvToColor(bv: number): string {
   if (bv < 0.6) return '#fffaf0';
   if (bv < 1.4) return '#ffd2a1';
   return '#ff7f00';
+}
+
+function mixWithWhite(color: string, amount: number): string {
+  const clampAmount = Math.min(Math.max(amount, 0), 1);
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  const mix = (component: number) =>
+    Math.round(component + (255 - component) * clampAmount).toString(16).padStart(2, '0');
+  return `#${mix(r)}${mix(g)}${mix(b)}`;
 }
 
 /**
@@ -85,7 +81,8 @@ export function drawStar(
   canvasHeight: number,
   time: number,
   projectionMode: ProjectionMode = 'orthographic',
-  observer?: ObserverLocation
+  observer?: ObserverLocation,
+  labelOptions: LabelOptions = { showProperNames: true, showBayerDesignations: true }
 ): boolean {
   // 座標変換
   const screenPos = celestialToScreen(
@@ -107,11 +104,17 @@ export function drawStar(
   const radius = magnitudeToRadius(star.vmag);
 
   // B-V色指数から色を計算
-  const color = bvToColor(star.bv ?? 0);
+  const baseColor = bvToColor(star.bv ?? 0);
+  const faintness = star.vmag !== null ? Math.min(Math.max((star.vmag - 3.5) / 2.5, 0), 1) : 0;
+  const color = faintness > 0 ? mixWithWhite(baseColor, faintness) : baseColor;
 
   // 瞬きアニメーション（明るい星ほど瞬く）
   const twinklePhase = star.id * 0.1 + time * 0.001;
-  const twinkle = Math.sin(twinklePhase) * 0.2 + 1; // 0.8 ~ 1.2倍
+  const noise = Math.sin(star.id * 12.9898 + time * 0.004);
+  const baseTwinkle = Math.sin(twinklePhase) * 0.18;
+  const brightBoost = star.vmag !== null && star.vmag <= 2 ? 0.28 : 0.18;
+  const twinkle = 1 + baseTwinkle + noise * 0.12 + brightBoost * Math.sin(twinklePhase * 0.6 + star.id * 0.5);
+  const clampedTwinkle = Math.min(Math.max(twinkle, 0.6), 1.6);
   const animatedRadius = radius * twinkle;
 
   // グラデーションで光の広がりを表現
@@ -124,8 +127,8 @@ export function drawStar(
     animatedRadius * 2
   );
   gradient.addColorStop(0, color);
-  gradient.addColorStop(0.3, color + 'CC'); // 70%不透明
-  gradient.addColorStop(0.6, color + '66'); // 40%不透明
+  gradient.addColorStop(0.3, color + 'CC'); // 透明度つき
+  gradient.addColorStop(0.6, color + '55');
   gradient.addColorStop(1, 'transparent');
 
   // 星を描画
@@ -137,15 +140,22 @@ export function drawStar(
   // 明るい星（1等星以上）は中心部をさらに明るく
   if (star.vmag <= 1) {
     ctx.fillStyle = '#ffffff';
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = Math.min(Math.max(clampedTwinkle, 0.5), 1);
     ctx.beginPath();
     ctx.arc(screenPos.x, screenPos.y, radius * 0.3, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1.0;
   }
 
-  // 星の名前を描画（等級が3.0以下で、固有名またはバイエル符号がある場合）
-  const label = getStarLabel(star);
+  // 星の名前を描画（等級が3.0以下で、表示設定に応じて決定）
+  let label: string | null = null;
+  if (isLabelEligible(star)) {
+    if (labelOptions.showProperNames && star.properName) {
+      label = star.properName;
+    } else if (labelOptions.showBayerDesignations) {
+      label = deriveBayerLabel(star);
+    }
+  }
 
   if (label) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // 少し透明な白
@@ -178,9 +188,28 @@ export function drawStar(
  */
 const sortByMagnitude = (a: Star, b: Star) => (b.vmag ?? 99) - (a.vmag ?? 99);
 
+const MILKY_WAY_MAGNITUDE_LIMIT = 7.5;
+const MILKY_WAY_GRID_COLS = 96;
+const MILKY_WAY_GRID_ROWS = 48;
+const MILKY_WAY_INTENSITY = {
+  telescope: {
+    baseAlpha: 0.26,
+    power: 0.65,
+    radiusScale: 1.45,
+  },
+  nakedEye: {
+    baseAlpha: 0.12,
+    power: 0.85,
+    radiusScale: 0.95,
+  },
+};
+
 interface DrawStarsOptions {
   skipOverlay?: boolean;
   drawGrid?: boolean;
+  showProperNames?: boolean;
+  showBayerDesignations?: boolean;
+  milkyWayGlow?: 'telescope' | 'naked-eye' | false;
 }
 
 export function drawStars(
@@ -195,7 +224,13 @@ export function drawStars(
   observer?: ObserverLocation,
   options: DrawStarsOptions = {}
 ): number {
-  const { skipOverlay = false, drawGrid = true } = options;
+  const {
+    skipOverlay = false,
+    drawGrid = true,
+    showProperNames = true,
+    showBayerDesignations = true,
+    milkyWayGlow = 'telescope',
+  } = options;
 
   // 天球グリッドを先に描画（星の下に）
   if (drawGrid) {
@@ -213,18 +248,112 @@ export function drawStars(
     }
   }
 
-  background = applyLevelOfDetail(background, zoom);
+  background = applyLevelOfDetail(background);
   background.sort(sortByMagnitude);
   highlighted.sort(sortByMagnitude);
 
-  let visibleCount = 0;
-
   const drawOrder = background.concat(highlighted);
+  const projected: Star[] = [];
+
+  let densityGrid: Float32Array | null = null;
+  let maxDensity = 0;
+
+  if (milkyWayGlow) {
+    densityGrid = new Float32Array(MILKY_WAY_GRID_COLS * MILKY_WAY_GRID_ROWS);
+  }
+
+  const accumulateMilkyWayDensity = (screenPos: { x: number; y: number }, star: Star) => {
+    if (!densityGrid || star.vmag === null || star.vmag > MILKY_WAY_MAGNITUDE_LIMIT) {
+      return;
+    }
+
+    const gx = (screenPos.x / canvasWidth) * MILKY_WAY_GRID_COLS;
+    const gy = (screenPos.y / canvasHeight) * MILKY_WAY_GRID_ROWS;
+    const baseX = Math.floor(gx);
+    const baseY = Math.floor(gy);
+    const fracX = gx - baseX;
+    const fracY = gy - baseY;
+    const weight = Math.max(0, MILKY_WAY_MAGNITUDE_LIMIT - star.vmag);
+
+    for (let dx = 0; dx <= 1; dx += 1) {
+      const col = baseX + dx;
+      if (col < 0 || col >= MILKY_WAY_GRID_COLS) continue;
+      const wx = dx === 0 ? 1 - fracX : fracX;
+
+      for (let dy = 0; dy <= 1; dy += 1) {
+        const row = baseY + dy;
+        if (row < 0 || row >= MILKY_WAY_GRID_ROWS) continue;
+        const wy = dy === 0 ? 1 - fracY : fracY;
+        const cellWeight = weight * wx * wy;
+        const idx = row * MILKY_WAY_GRID_COLS + col;
+        const value = densityGrid[idx] + cellWeight;
+        densityGrid[idx] = value;
+        if (value > maxDensity) {
+          maxDensity = value;
+        }
+      }
+    }
+  };
+
+  for (const star of drawOrder) {
+    const screenPos = celestialToScreen(
+      star.ra,
+      star.dec,
+      viewCenter,
+      zoom,
+      canvasWidth,
+      canvasHeight,
+      projectionMode,
+      observer
+    );
+
+    if (!screenPos) {
+      continue;
+    }
+
+    if (milkyWayGlow) {
+      accumulateMilkyWayDensity(screenPos, star);
+    }
+
+    projected.push(star);
+  }
+
+  if (densityGrid && maxDensity > 0) {
+    const modeIntensity = milkyWayGlow === 'naked-eye' ? MILKY_WAY_INTENSITY.nakedEye : MILKY_WAY_INTENSITY.telescope;
+    const cellWidth = canvasWidth / MILKY_WAY_GRID_COLS;
+    const cellHeight = canvasHeight / MILKY_WAY_GRID_ROWS;
+    const baseAlpha = modeIntensity.baseAlpha;
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let row = 0; row < MILKY_WAY_GRID_ROWS; row += 1) {
+      for (let col = 0; col < MILKY_WAY_GRID_COLS; col += 1) {
+        const value = densityGrid[row * MILKY_WAY_GRID_COLS + col];
+        if (value <= 0) continue;
+        const normalized = Math.pow(value / maxDensity, modeIntensity.power);
+        const alpha = baseAlpha * normalized;
+        if (alpha < 0.005) continue;
+
+        const cx = col * cellWidth + cellWidth / 2;
+        const cy = row * cellHeight + cellHeight / 2;
+        const radius = Math.sqrt(cellWidth * cellWidth + cellHeight * cellHeight) * modeIntensity.radiusScale;
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        gradient.addColorStop(0, `rgba(130, 160, 255, ${alpha})`);
+        gradient.addColorStop(0.6, `rgba(80, 120, 210, ${alpha * 0.55})`);
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
+      }
+    }
+    ctx.restore();
+  }
+
+  let visibleCount = 0;
 
   const observerCallback = getDrawStarsObserver();
   const start = observerCallback ? perfNow() : 0;
 
-  for (const star of drawOrder) {
+  for (const star of projected) {
     const drawn = drawStar(
       ctx,
       star,
@@ -234,7 +363,8 @@ export function drawStars(
       canvasHeight,
       time,
       projectionMode,
-      observer
+      observer,
+      { showProperNames, showBayerDesignations }
     );
     if (drawn) visibleCount++;
   }
@@ -266,39 +396,9 @@ export function drawStars(
 }
 
 export function clearStarRendererCaches(): void {
-  starLabelCache.clear();
+  // キャッシュは現在未使用だが、互換性のために関数を残す
 }
-function applyLevelOfDetail(stars: Star[], zoom: number): Star[] {
-  const BASE_THRESHOLD = 8000;
-  const threshold = Math.max(1500, Math.round(BASE_THRESHOLD / Math.max(0.5, zoom)));
-  if (stars.length <= threshold) {
-    return stars;
-  }
-
-  const brightQuota = Math.floor(threshold * 0.6);
-  const brightCandidates = stars
-    .filter((star) => star.vmag !== null)
-    .sort((a, b) => (a.vmag ?? 99) - (b.vmag ?? 99));
-
-  const selected: Star[] = brightCandidates.slice(0, Math.min(brightQuota, brightCandidates.length));
-  const selectedIds = new Set(selected.map((star) => star.id));
-
-  const remaining: Star[] = [];
-  for (const star of stars) {
-    if (!selectedIds.has(star.id)) {
-      remaining.push(star);
-    }
-  }
-
-  const slotsLeft = threshold - selected.length;
-  if (slotsLeft <= 0) {
-    return selected;
-  }
-
-  const step = Math.max(1, Math.floor(remaining.length / slotsLeft));
-  for (let i = 0; i < remaining.length && selected.length < threshold; i += step) {
-    selected.push(remaining[i]);
-  }
-
-  return selected;
+function applyLevelOfDetail(stars: Star[]): Star[] {
+  // 精度優先モード: 可能な限り全ての星を描画する
+  return stars;
 }

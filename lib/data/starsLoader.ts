@@ -1,5 +1,6 @@
 import type { Star } from '@/types/star';
 import { createCachedJsonLoader, JsonFetcher } from './cachedJsonLoader';
+import BRIGHT_STAR_NAMES from '@/data/brightStarNames';
 
 const STARS_DATA_PATH = '/data/stars.json';
 
@@ -13,6 +14,14 @@ export interface LoadStarsOptions {
 const starsLoader = createCachedJsonLoader<Star[]>({
   path: STARS_DATA_PATH,
   importData: () => import('@/public/data/stars.json'),
+  transform: (data) =>
+    (data as Star[]).map((star) => {
+      const properName = BRIGHT_STAR_NAMES[star.id];
+      if (properName && star.properName !== properName) {
+        return { ...star, properName };
+      }
+      return star;
+    }),
 });
 
 async function ensureStars(fetcher?: JsonFetcher): Promise<Star[]> {

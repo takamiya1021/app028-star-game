@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useCallback } from 'react';
 import { useSettings } from '@/context/SettingsContext';
 import { FadeIn } from '@/components/Animate/FadeIn';
@@ -43,6 +41,20 @@ export function SettingsPanel() {
   const handleSoundToggle = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       updateSettings({ soundEnabled: event.target.checked });
+    },
+    [updateSettings]
+  );
+
+  const handleBayerToggle = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      updateSettings({ showBayerDesignations: event.target.checked });
+    },
+    [updateSettings]
+  );
+
+  const handleProperNameToggle = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      updateSettings({ showProperNames: event.target.checked });
     },
     [updateSettings]
   );
@@ -111,6 +123,28 @@ export function SettingsPanel() {
             onChange={handleSoundToggle}
             className="h-5 w-5 accent-blue-400"
             aria-label="効果音を有効にする"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm">
+          <span className="font-semibold text-blue-100">固有名（カタカナ）を表示</span>
+          <input
+            type="checkbox"
+            checked={settings.showProperNames}
+            onChange={handleProperNameToggle}
+            className="h-5 w-5 accent-blue-400"
+            aria-label="固有名を表示する"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm">
+          <span className="font-semibold text-blue-100">バイエル記号を表示</span>
+          <input
+            type="checkbox"
+            checked={settings.showBayerDesignations}
+            onChange={handleBayerToggle}
+            className="h-5 w-5 accent-blue-400"
+            aria-label="バイエル記号を表示する"
           />
         </label>
       </div>

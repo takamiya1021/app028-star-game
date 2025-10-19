@@ -13,6 +13,8 @@ describe('SettingsContext', () => {
     expect(result.current.settings.difficulty).toBe('medium');
     expect(result.current.settings.questionCount).toBe(10);
     expect(result.current.settings.soundEnabled).toBe(true);
+    expect(result.current.settings.showProperNames).toBe(true);
+    expect(result.current.settings.showBayerDesignations).toBe(false);
   });
 
   it('updates individual settings fields', () => {
@@ -37,16 +39,33 @@ describe('SettingsContext', () => {
       result.current.updateSettings({ soundEnabled: false });
     });
     expect(result.current.settings.soundEnabled).toBe(false);
+
+    act(() => {
+      result.current.updateSettings({ showProperNames: false });
+    });
+    expect(result.current.settings.showProperNames).toBe(false);
+
+    act(() => {
+      result.current.updateSettings({ showBayerDesignations: true });
+    });
+    expect(result.current.settings.showBayerDesignations).toBe(true);
   });
 
   it('resets to defaults', () => {
     const { result } = renderHook(() => useSettings(), { wrapper });
 
     act(() => {
-      result.current.updateSettings({ category: 'north', soundEnabled: false });
+      result.current.updateSettings({
+        category: 'north',
+        soundEnabled: false,
+        showProperNames: false,
+        showBayerDesignations: true,
+      });
     });
     expect(result.current.settings.category).toBe('north');
     expect(result.current.settings.soundEnabled).toBe(false);
+    expect(result.current.settings.showProperNames).toBe(false);
+    expect(result.current.settings.showBayerDesignations).toBe(true);
 
     act(() => {
       result.current.resetSettings();
@@ -57,6 +76,8 @@ describe('SettingsContext', () => {
       difficulty: 'medium',
       questionCount: 10,
       soundEnabled: true,
+      showProperNames: true,
+      showBayerDesignations: false,
     });
   });
 

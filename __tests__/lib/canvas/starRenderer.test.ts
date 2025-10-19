@@ -121,6 +121,49 @@ describe('starRenderer drawStar', () => {
     );
     expect(result).toBe(false);
   });
+
+  it('omits proper names when disabled in options', () => {
+    const ctx = createMockContext();
+    drawStar(
+      ctx,
+      baseStar,
+      { ra: 0, dec: 0 },
+      1,
+      800,
+      600,
+      1000,
+      'orthographic',
+      undefined,
+      { showProperNames: false, showBayerDesignations: false }
+    );
+
+    expect(ctx.fillText).not.toHaveBeenCalled();
+  });
+
+  it('omits bayer labels when disabled', () => {
+    const ctx = createMockContext();
+    const bayerStar: Star = {
+      ...baseStar,
+      id: 99,
+      properName: undefined,
+      name: 'Alp Ori',
+    };
+
+    drawStar(
+      ctx,
+      bayerStar,
+      { ra: 0, dec: 0 },
+      1,
+      800,
+      600,
+      1000,
+      'orthographic',
+      undefined,
+      { showProperNames: false, showBayerDesignations: false }
+    );
+
+    expect(ctx.fillText).not.toHaveBeenCalled();
+  });
 });
 
 describe('starRenderer drawStars', () => {

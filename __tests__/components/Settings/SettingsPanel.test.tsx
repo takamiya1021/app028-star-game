@@ -46,4 +46,24 @@ describe('SettingsPanel', () => {
     fireEvent.click(toggle);
     expect(toggle).not.toBeChecked();
   });
+
+  it('toggles proper name visibility', () => {
+    renderComponent();
+
+    const toggle = screen.getByLabelText('固有名を表示する');
+    expect(toggle).toBeChecked();
+
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+  });
+
+  it('toggles bayer designation visibility', () => {
+    renderComponent();
+
+    const toggle = screen.getByLabelText('バイエル記号を表示する');
+    expect(toggle).not.toBeChecked();
+
+    fireEvent.click(toggle);
+    expect(toggle).toBeChecked();
+  });
 });

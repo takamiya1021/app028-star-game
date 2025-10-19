@@ -17,6 +17,8 @@ export interface Settings {
   difficulty: 'easy' | 'medium' | 'hard'; // 難易度
   questionCount: 10 | 20 | 30 | 999; // 出題数（999は無制限）
   soundEnabled: boolean;         // 音声ON/OFF
+  showBayerDesignations: boolean; // バイエル符号を表示
+  showProperNames: boolean;       // 固有名を表示
 }
 
 // スコアの型定義

@@ -14,6 +14,7 @@ import { loadStars } from '@/lib/data/starsLoader';
 import QuizContainer from '@/components/Quiz/QuizContainer';
 import ScoreDisplay from '@/components/Score/ScoreDisplay';
 import { useQuiz } from '@/context/QuizContext';
+import { useSettings } from '@/context/SettingsContext';
 import { useBreakpoint } from '@/lib/ui/useBreakpoint';
 import { PageTransition } from '@/components/Animate/PageTransition';
 import { FadeIn } from '@/components/Animate/FadeIn';
@@ -31,6 +32,7 @@ export default function Home() {
   const [isCanvasSupported, setCanvasSupported] = useState(true);
 
   const { correctCount, totalCount, history } = useQuiz();
+  const { settings } = useSettings();
   const breakpoint = useBreakpoint();
 
   useEffect(() => {
@@ -123,6 +125,11 @@ export default function Home() {
         onVisibleCountChange={setVisibleStarCount}
         projectionMode={projectionMode}
         onCanvasSupportChange={handleCanvasSupportChange}
+        labelPreferences={{
+          showProperNames: settings.showProperNames,
+          showBayerDesignations: settings.showBayerDesignations,
+        }}
+        milkyWayGlow={observationMode === 'telescope' ? 'telescope' : 'naked-eye'}
       />
 
       <header className="pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4">
@@ -220,7 +227,7 @@ export default function Home() {
             <button
               type="button"
               onClick={toggleObservationMode}
-              className="flex h-14 w-full flex-1 items-center justify-between rounded-2xl bg-purple-600/80 px-4 text-base font-semibold shadow-lg transition hover:bg-purple-500/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:max-w-xs"
+              className="flex h-14 w-full flex-1 items-center justify-between rounded-2xl bg-purple-600/80 px-4 text-base font-semibold text-white shadow-lg transition hover:bg-purple-500/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white sm:max-w-xs"
               aria-pressed={observationMode === 'telescope'}
               aria-label="観測モードを切り替える"
             >

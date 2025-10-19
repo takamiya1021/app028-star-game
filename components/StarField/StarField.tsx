@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Star } from '@/types/star';
 import { ProjectionMode, ObserverLocation } from '@/lib/canvas/coordinateUtils';
 import { drawStars } from '@/lib/canvas/starRenderer';
@@ -13,6 +13,11 @@ interface StarFieldProps {
   onVisibleCountChange?: (count: number) => void;
   projectionMode?: ProjectionMode;
   onCanvasSupportChange?: (supported: boolean) => void;
+  labelPreferences?: {
+    showProperNames: boolean;
+    showBayerDesignations: boolean;
+  };
+  milkyWayGlow?: 'telescope' | 'naked-eye' | false;
 }
 
 // 東京の位置と観測日時（2025年1月1日 00:00:00 JST = 2024年12月31日 15:00:00 UTC）
@@ -38,6 +43,8 @@ export default function StarField({
   onVisibleCountChange,
   projectionMode = 'orthographic',
   onCanvasSupportChange,
+  labelPreferences,
+  milkyWayGlow = 'telescope',
 }: StarFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -53,6 +60,13 @@ export default function StarField({
   const zoomRef = useRef(initialZoom);
   const projectionModeRef = useRef(projectionMode);
   const canvasSupportRef = useRef<boolean | null>(null);
+  const labelOptions = useMemo(
+    () => ({
+      showProperNames: labelPreferences?.showProperNames ?? true,
+      showBayerDesignations: labelPreferences?.showBayerDesignations ?? true,
+    }),
+    [labelPreferences?.showProperNames, labelPreferences?.showBayerDesignations]
+  );
 
   useEffect(() => {
     zoomRef.current = zoom;
@@ -282,6 +296,9 @@ export default function StarField({
         projectionMode === 'stereographic' ? TOKYO_OBSERVER : undefined,
         {
           skipOverlay: false,
+          showProperNames: labelOptions.showProperNames,
+          showBayerDesignations: labelOptions.showBayerDesignations,
+          milkyWayGlow,
         }
       );
 
@@ -300,7 +317,18 @@ export default function StarField({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [stars, viewCenter, zoom, canvasSize, projectionMode, onVisibleCountChange, onCanvasSupportChange]);
+  }, [
+    stars,
+    viewCenter,
+    zoom,
+    canvasSize,
+    projectionMode,
+    onVisibleCountChange,
+    onCanvasSupportChange,
+    labelOptions.showProperNames,
+    labelOptions.showBayerDesignations,
+    milkyWayGlow,
+  ]);
 
   return (
     <canvas

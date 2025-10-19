@@ -18,6 +18,8 @@ const defaultSettings: SettingsState = {
   difficulty: 'medium',
   questionCount: 10,
   soundEnabled: true,
+  showBayerDesignations: false,
+  showProperNames: true,
 };
 
 function sanitizeSettings(partial: Partial<SettingsState>): Partial<SettingsState> {
@@ -37,6 +39,14 @@ function sanitizeSettings(partial: Partial<SettingsState>): Partial<SettingsStat
 
   if (typeof partial.soundEnabled === 'boolean') {
     next.soundEnabled = partial.soundEnabled;
+  }
+
+  if (typeof partial.showBayerDesignations === 'boolean') {
+    next.showBayerDesignations = partial.showBayerDesignations;
+  }
+
+  if (typeof partial.showProperNames === 'boolean') {
+    next.showProperNames = partial.showProperNames;
   }
 
   return next;
