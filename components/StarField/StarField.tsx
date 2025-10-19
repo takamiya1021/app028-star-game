@@ -82,7 +82,7 @@ export default function StarField({
     setZoom((prev) => {
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
       const next = prev + delta;
-      return Math.max(0.5, Math.min(10.0, next));
+      return Math.max(0.5, Math.min(20.0, next));
     });
   }, []);
 
@@ -179,7 +179,7 @@ export default function StarField({
         const scale = distance / touchDistanceRef.current;
         touchDistanceRef.current = distance;
 
-        setZoom((prevZoom) => Math.max(0.5, Math.min(10.0, prevZoom * scale)));
+        setZoom((prevZoom) => Math.max(0.5, Math.min(20.0, prevZoom * scale)));
       } else if (e.touches.length === 1 && lastTouchPosRef.current) {
         const deltaX = e.touches[0].clientX - lastTouchPosRef.current.x;
         const deltaY = e.touches[0].clientY - lastTouchPosRef.current.y;

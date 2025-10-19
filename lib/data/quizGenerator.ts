@@ -22,7 +22,7 @@ function generateId() {
   if (typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto) {
     try {
       return globalThis.crypto.randomUUID();
-    } catch (error) {
+    } catch {
       // ignore
     }
   }

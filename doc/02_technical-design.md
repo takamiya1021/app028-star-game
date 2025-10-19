@@ -190,7 +190,7 @@ interface Quiz {
 interface StarFieldProps {
   stars: Star[];                   // 星データ配列
   viewCenter?: { ra: number; dec: number }; // 視野中心（赤経・赤緯）
-  zoom?: number;                   // ズーム倍率（0.5〜10.0）
+  zoom?: number;                   // ズーム倍率（0.5〜20.0）
   className?: string;              // CSSクラス名
   onVisibleCountChange?: (count: number) => void; // 表示星数変更時のコールバック
   projectionMode?: ProjectionMode; // 投影モード（'orthographic' | 'stereographic'）
