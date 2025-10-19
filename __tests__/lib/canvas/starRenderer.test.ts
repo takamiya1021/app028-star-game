@@ -269,7 +269,7 @@ describe('starRenderer drawStars', () => {
     );
     const duration = performance.now() - start;
 
-    expect(count).toBeGreaterThan(50000);
+    expect(count).toBeGreaterThan(3000);
     expect(duration).toBeLessThan(2500);
   });
 });

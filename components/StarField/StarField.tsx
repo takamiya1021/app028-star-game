@@ -21,6 +21,14 @@ const TOKYO_OBSERVER: ObserverLocation = {
   date: new Date('2024-12-31T15:00:00Z'), // UTC
 };
 
+const PAN_INTERVAL_MS = 16;
+
+const getTimestamp = () => (
+  typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now()
+    : Date.now()
+);
+
 export default function StarField({
   stars,
   viewCenter: initialViewCenter = { ra: 180, dec: 0 },
@@ -35,6 +43,7 @@ export default function StarField({
   const [viewCenter, setViewCenter] = useState(initialViewCenter);
   const animationRef = useRef<number>();
   const visibleCountRef = useRef<number>(0);
+  const lastPanUpdateRef = useRef<number>(Number.NEGATIVE_INFINITY);
 
   const touchDistanceRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
@@ -86,6 +95,18 @@ export default function StarField({
     });
   }, []);
 
+  const setViewCenterThrottled = useCallback(
+    (updater: (prev: { ra: number; dec: number }) => { ra: number; dec: number }) => {
+      const now = getTimestamp();
+      if (now - lastPanUpdateRef.current < PAN_INTERVAL_MS) {
+        return;
+      }
+      lastPanUpdateRef.current = now;
+      setViewCenter(updater);
+    },
+    []
+  );
+
   const handleMouseDown = useCallback((e: MouseEvent) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -106,13 +127,13 @@ export default function StarField({
     const deltaRA = mode === 'stereographic' ? deltaX * sensitivity : -deltaX * sensitivity;
     const deltaDec = deltaY * sensitivity;
 
-    setViewCenter((prev) => ({
+    setViewCenterThrottled((prev) => ({
       ra: (prev.ra + deltaRA + 360) % 360,
       dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)),
     }));
 
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
-  }, []);
+  }, [setViewCenterThrottled]);
 
   const handleMouseUp = useCallback(() => {
     const canvas = canvasRef.current;
@@ -187,7 +208,7 @@ export default function StarField({
         const deltaRA = deltaX * sensitivity;
         const deltaDec = deltaY * sensitivity;
 
-        setViewCenter((prev) => ({
+        setViewCenterThrottled((prev) => ({
           ra: (prev.ra - deltaRA + 360) % 360,
           dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)),
         }));

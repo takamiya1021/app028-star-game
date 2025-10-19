@@ -203,7 +203,7 @@ export function drawStars(
   }
 
   const highlighted: Star[] = [];
-  const background: Star[] = [];
+  let background: Star[] = [];
 
   for (const star of stars) {
     if (star.properName || (star.vmag !== null && star.vmag <= 2.0)) {
@@ -213,6 +213,7 @@ export function drawStars(
     }
   }
 
+  background = applyLevelOfDetail(background, zoom);
   background.sort(sortByMagnitude);
   highlighted.sort(sortByMagnitude);
 
@@ -266,4 +267,17 @@ export function drawStars(
 
 export function clearStarRendererCaches(): void {
   starLabelCache.clear();
+}
+function applyLevelOfDetail(stars: Star[], zoom: number): Star[] {
+  const BASE_THRESHOLD = 8000;
+  const threshold = Math.max(1500, Math.round(BASE_THRESHOLD / Math.max(0.5, zoom)));
+  if (stars.length <= threshold) {
+    return stars;
+  }
+  const step = Math.ceil(stars.length / threshold);
+  const sampled: Star[] = [];
+  for (let i = 0; i < stars.length; i += step) {
+    sampled.push(stars[i]);
+  }
+  return sampled;
 }

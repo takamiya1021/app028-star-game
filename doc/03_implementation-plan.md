@@ -465,8 +465,8 @@
 **【✅】描画最適化実装（Green）**
 - ✅ 視野カリング実装
 - ✅ 等級フィルタリング
-- LOD（Level of Detail）実装
-- デバウンス・スロットリング
+- ✅ LOD（背景星サンプリング）実装
+- ✅ パン操作を16ms間隔にスロットリング
 
 **【🔶】React最適化実装（Green）**
 - 🔶 React.memo、useMemo、useCallback適用
