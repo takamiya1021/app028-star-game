@@ -445,7 +445,9 @@
 - ✅ ボタンのインタラクション（Tailwind CSS transition使用）
 - 星のハイライト
 
-**【】アニメーションリファクタリング（Refactor）**
+**【✅】アニメーションリファクタリング（Refactor）**
+- ✅ 共通モーション設定 `lib/ui/motion.ts` を導入し、FadeIn/PageTransition で再利用
+- ✅ テストスイートで回帰確認
 
 ---
 
