@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { StaggerContainer } from '@/components/Animate/StaggerContainer';
 
@@ -13,7 +14,7 @@ const choiceVariants = {
   show: { opacity: 1, y: 0 },
 };
 
-export function QuizChoices({
+function QuizChoicesComponent({
   choices,
   disabled = false,
   selected = null,
@@ -47,5 +48,7 @@ export function QuizChoices({
     </StaggerContainer>
   );
 }
+
+export const QuizChoices = memo(QuizChoicesComponent);
 
 export default QuizChoices;

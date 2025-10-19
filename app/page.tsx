@@ -24,25 +24,33 @@ export default function Home() {
   const [observationMode, setObservationMode] = useState<ObservationMode>('naked-eye');
   const [allStars, setAllStars] = useState<Star[]>([]);
   const [isMobileQuizOpen, setMobileQuizOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const { correctCount, totalCount, history } = useQuiz();
   const breakpoint = useBreakpoint();
 
   useEffect(() => {
     let cancelled = false;
-    loadStars()
-      .then((data) => {
+    async function fetchStars() {
+      try {
+        const data = await loadStars();
         if (!cancelled) {
           setAllStars(data);
+          setLoadError(null);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('星データの読み込みに失敗しました', error);
-      });
+        if (!cancelled) {
+          setLoadError('星データの読み込みに失敗しました');
+        }
+      }
+    }
+    fetchStars();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const stars = useMemo(() => {
     if (allStars.length === 0) {
@@ -67,6 +75,10 @@ export default function Home() {
   }, []);
 
   const closeMobileQuiz = useCallback(() => setMobileQuizOpen(false), []);
+
+  const retryLoadStars = useCallback(() => {
+    setLoadAttempt((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (breakpoint !== 'sm') {
@@ -110,6 +122,22 @@ export default function Home() {
           </p>
         </FadeIn>
       </header>
+
+      {loadError && (
+        <div
+          role="alert"
+          className="pointer-events-auto absolute left-1/2 top-28 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-red-500/40 bg-red-500/20 px-4 py-2 text-sm text-white shadow-lg backdrop-blur"
+        >
+          <span>{loadError}</span>
+          <button
+            type="button"
+            onClick={retryLoadStars}
+            className="rounded-md border border-white/50 px-3 py-1 text-xs font-semibold transition hover:border-white"
+          >
+            再読み込み
+          </button>
+        </div>
+      )}
 
       <aside className="pointer-events-auto absolute right-6 top-28 hidden w-full max-w-sm flex-col gap-4 rounded-3xl bg-black/50 p-5 text-white shadow-2xl backdrop-blur-lg xl:flex">
         <ScoreDisplay score={score} streak={streak} label="現在のスコア" />
