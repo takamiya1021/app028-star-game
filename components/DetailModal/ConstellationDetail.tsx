@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import Image from 'next/image';
 import type { Constellation } from '@/types/constellation';
 import type { Star } from '@/types/star';
 import DetailSection from './DetailSection';
@@ -72,6 +73,18 @@ export function ConstellationDetail({ constellation, stars }: ConstellationDetai
         <p className="text-sm text-blue-200">
           {constellation.name} / {hemisphereLabel} / 難易度: {difficultyLabel}
         </p>
+        {constellation.illustrationPath && (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-white/20 bg-black/30">
+            <Image
+              src={constellation.illustrationPath}
+              alt={`${constellation.nameJa} のイラスト`}
+              width={640}
+              height={360}
+              className="h-auto w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
       </header>
 
       <DetailSection title="神話・由来" ariaLabel="神話と見頃の情報">

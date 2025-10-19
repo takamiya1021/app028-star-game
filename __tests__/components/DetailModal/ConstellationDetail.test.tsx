@@ -68,6 +68,15 @@ describe('ConstellationDetail', () => {
     expect(screen.getByText('リゲル')).toBeInTheDocument();
   });
 
+  it('renders illustration when path provided', () => {
+    const constellation = buildConstellation({ illustrationPath: '/images/test.png' });
+    render(<ConstellationDetail constellation={constellation} stars={buildStars()} />);
+
+    const image = screen.getByRole('img', { name: /オリオン座 のイラスト/ });
+    expect(image).toHaveAttribute('loading', 'lazy');
+    expect(image).toHaveAttribute('src');
+  });
+
   it('shows mythology and seasonal description when available', () => {
     const constellation = buildConstellation();
     render(<ConstellationDetail constellation={constellation} />);

@@ -8,6 +8,7 @@ import QuizQuestion from './QuizQuestion';
 import QuizChoices from './QuizChoices';
 import QuizResult from './QuizResult';
 import { FadeIn } from '@/components/Animate/FadeIn';
+import type { Quiz } from '@/types/quiz';
 
 export function QuizContainer() {
   const { settings } = useSettings();
@@ -35,10 +36,27 @@ export function QuizContainer() {
     setErrorMessage(null);
     setSelectedChoice(null);
     try {
-      const quiz = await generateQuiz({
-        difficulty: settings.difficulty,
-        category: settings.category,
-      });
+      const forcedQuizQueue =
+        typeof window !== 'undefined' && Array.isArray((window as typeof window & { __E2E_QUIZ_QUEUE__?: Quiz[] }).__E2E_QUIZ_QUEUE__)
+          ? (window as typeof window & { __E2E_QUIZ_QUEUE__?: Quiz[] }).__E2E_QUIZ_QUEUE__
+          : undefined;
+      let forcedQuiz =
+        typeof window !== 'undefined' && '__E2E_QUIZ__' in window
+          ? (window as typeof window & { __E2E_QUIZ__?: Quiz }).__E2E_QUIZ__
+          : undefined;
+      if (!forcedQuiz && forcedQuizQueue?.length) {
+        forcedQuiz = forcedQuizQueue.shift();
+      }
+      if (forcedQuiz && typeof window !== 'undefined' && '__E2E_QUIZ__' in window) {
+        delete (window as typeof window & { __E2E_QUIZ__?: Quiz }).__E2E_QUIZ__;
+      }
+
+      const quiz = forcedQuiz
+        ? forcedQuiz
+        : await generateQuiz({
+            difficulty: settings.difficulty,
+            category: settings.category,
+          });
       if (!isMountedRef.current) return;
       setNewQuiz(quiz);
       setStatus('ready');

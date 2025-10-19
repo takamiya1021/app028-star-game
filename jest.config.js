@@ -24,6 +24,8 @@ const customJestConfig = {
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
 
+  testPathIgnorePatterns: ['<rootDir>/tests/e2e/'],
+
   // カバレッジ収集対象外のパターン
   coveragePathIgnorePatterns: [
     '/node_modules/',
