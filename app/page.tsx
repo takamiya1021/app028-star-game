@@ -1,26 +1,47 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import StarField from '@/components/StarField/StarField';
 import { ProjectionMode } from '@/lib/canvas/coordinateUtils';
 import { ObservationMode, OBSERVATION_MODE_LABELS, OBSERVATION_MODE_DESCRIPTIONS, OBSERVATION_MODE_ICONS } from '@/types/observationMode';
-import starsData from '@/public/data/stars.json';
+import type { Star } from '@/types/star';
+import { loadStars } from '@/lib/data/starsLoader';
 
 export default function Home() {
   const [visibleStarCount, setVisibleStarCount] = useState(0);
   const [projectionMode, setProjectionMode] = useState<ProjectionMode>('orthographic');
   const [observationMode, setObservationMode] = useState<ObservationMode>('naked-eye');
+  const [allStars, setAllStars] = useState<Star[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadStars()
+      .then((data) => {
+        if (!cancelled) {
+          setAllStars(data);
+        }
+      })
+      .catch((error) => {
+        console.error('星データの読み込みに失敗しました', error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 観測モードに応じて星データをフィルタリング
   const stars = useMemo(() => {
+    if (allStars.length === 0) {
+      return [] as Star[];
+    }
     if (observationMode === 'naked-eye') {
       // 肉眼観測モード: 7等星まで
-      return starsData.filter((star: any) => star.vmag !== null && star.vmag < 7);
+      return allStars.filter((star) => star.vmag !== null && star.vmag < 7);
     } else {
       // 天の川モード: 9等星まで（全データ）
-      return starsData;
+      return allStars;
     }
-  }, [observationMode]);
+  }, [allStars, observationMode]);
 
   const toggleProjection = () => {
     setProjectionMode(prev => prev === 'orthographic' ? 'stereographic' : 'orthographic');
@@ -73,7 +94,7 @@ export default function Home() {
           >
             <div
               className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-200 flex items-center justify-center ${
-                observationMode === 'milky-way' ? 'translate-x-8' : ''
+                observationMode === 'telescope' ? 'translate-x-8' : ''
               }`}
             >
               <span className="text-xs">
@@ -90,6 +111,9 @@ export default function Home() {
             </span>
           </div>
         </div>
+        <p className="mt-2 text-xs text-gray-400">
+          星データ: {allStars.length.toLocaleString()} 件 / 表示対象: {stars.length.toLocaleString()} 件
+        </p>
       </div>
 
       {/* 星の数表示 */}

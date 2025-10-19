@@ -20,7 +20,7 @@
 - **データ形式**: JSON（静的ファイル）
 - **データソース**:
   - Hipparcos星表（9等星まで、約12万個）
-    - `stars.json`: 肉眼観測モード（7等まで、41,057個）
+    - `stars.json`: 肉眼観測モード（7等まで、約14,000個）
     - `stars-10mag.json`: 天の川モード（9等まで、120,282個）
   - IAU 88星座データ
   - Stellarium星座線データ（constellationship.fab）
@@ -41,7 +41,7 @@
 app028-star-game/
 ├── public/
 │   ├── data/
-│   │   ├── stars.json              # 肉眼観測モード（7等まで、41,057個）
+│   │   ├── stars.json              # 肉眼観測モード（7等まで、約14,000個）
 │   │   ├── stars-10mag.json        # 天の川モード（9等まで、120,282個）
 │   │   ├── stars-sample.json       # サンプルデータ
 │   │   ├── constellations-sample.json # 星座サンプルデータ

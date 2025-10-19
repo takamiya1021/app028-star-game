@@ -3,11 +3,10 @@ import { Star } from '@/types/star';
 import {
   celestialToScreen,
   magnitudeToRadius,
-  adjustColorByMagnitude,
   ProjectionMode,
   ObserverLocation,
 } from './coordinateUtils';
-import { drawCelestialGrid, drawViewBorder } from './gridRenderer';
+import { drawCelestialGrid } from './gridRenderer';
 
 /**
  * B-V色指数から星の色を計算
@@ -227,7 +226,6 @@ export function drawStars(
 
   // 表示範囲を計算（正射図法用）
   const fov = 90 / zoom; // 視野角
-  const halfFov = fov / 2;
 
   ctx.fillText(`表示範囲:`, 15, 95);
   ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 115);

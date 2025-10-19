@@ -134,6 +134,9 @@ export function celestialToScreen(
   projectionMode: ProjectionMode = 'orthographic',
   observer?: ObserverLocation
 ): { x: number; y: number } | null {
+  if (observer) {
+    // TODO: 観測者位置を考慮した投影を実装する際に使用
+  }
   if (projectionMode === 'stereographic') {
     return celestialToScreenStereographic(ra, dec, viewCenter, zoom, canvasWidth, canvasHeight);
   } else {
@@ -186,62 +189,6 @@ function celestialToScreenOrthographic(
   const screenY = canvasHeight / 2 - y * scaleY;
 
   // 画面外判定（少し広めに）
-  const margin = 100;
-  if (
-    screenX < -margin ||
-    screenX > canvasWidth + margin ||
-    screenY < -margin ||
-    screenY > canvasHeight + margin
-  ) {
-    return null;
-  }
-
-  return { x: screenX, y: screenY };
-}
-
-/**
- * ステレオ図法（観測者位置を考慮）：地平座標を使用
- * 地球から夜空を見上げる視点（天文学的に完全に正確）
- */
-function celestialToScreenStereographicWithObserver(
-  ra: number,
-  dec: number,
-  viewCenter: { ra: number; dec: number },
-  zoom: number,
-  canvasWidth: number,
-  canvasHeight: number,
-  observer: ObserverLocation
-): { x: number; y: number } | null {
-  // 天球座標を地平座標に変換
-  const horizontal = equatorialToHorizontal(ra, dec, observer);
-
-  // 地平線より下は表示しない
-  if (horizontal.altitude < 0) {
-    return null;
-  }
-
-  // 視野中心の地平座標を計算
-  const viewCenterHorizontal = equatorialToHorizontal(viewCenter.ra, viewCenter.dec, observer);
-
-  // 方位角・高度の差を計算
-  let azDiff = horizontal.azimuth - viewCenterHorizontal.azimuth;
-  // 方位角の差を-180〜180度に正規化
-  if (azDiff > 180) azDiff -= 360;
-  if (azDiff < -180) azDiff += 360;
-
-  const altDiff = horizontal.altitude - viewCenterHorizontal.altitude;
-
-  // 視野角を計算
-  const fov = 90 / zoom;
-
-  // 画面上の位置に変換
-  const scaleX = canvasWidth / fov;
-  const scaleY = canvasHeight / fov;
-
-  const screenX = canvasWidth / 2 + azDiff * scaleX;
-  const screenY = canvasHeight / 2 - altDiff * scaleY;
-
-  // 画面外判定
   const margin = 100;
   if (
     screenX < -margin ||

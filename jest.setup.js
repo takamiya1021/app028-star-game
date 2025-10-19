@@ -1,5 +1,6 @@
 // jest-domをインポート（toBeInTheDocument等のカスタムマッチャーを追加）
 import '@testing-library/jest-dom'
+import './__tests__/__mocks__/touch-polyfill'
 
 // Canvas APIのモック（星空描画のテスト用）
 HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
@@ -23,10 +24,23 @@ HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
   rotate: jest.fn(),
   arc: jest.fn(),
   fill: jest.fn(),
+  strokeRect: jest.fn(),
   measureText: jest.fn(() => ({ width: 0 })),
   transform: jest.fn(),
   rect: jest.fn(),
   clip: jest.fn(),
+  createLinearGradient: jest.fn(() => ({
+    addColorStop: jest.fn(),
+  })),
+  createRadialGradient: jest.fn(() => ({
+    addColorStop: jest.fn(),
+  })),
+  globalAlpha: 1,
+  fillStyle: '',
+  strokeStyle: '',
+  font: '',
+  textAlign: 'left',
+  textBaseline: 'alphabetic',
 }))
 
 // matchMediaのモック（レスポンシブデザインのテスト用）

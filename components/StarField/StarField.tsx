@@ -266,7 +266,7 @@ export default function StarField({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     const animate = () => {
       const time = Date.now() - startTime;
@@ -304,7 +304,7 @@ export default function StarField({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [stars, viewCenter, zoom, canvasSize, projectionMode]);
+  }, [stars, viewCenter, zoom, canvasSize, projectionMode, onVisibleCountChange]);
 
   return (
     <canvas
