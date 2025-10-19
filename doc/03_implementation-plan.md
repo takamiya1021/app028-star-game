@@ -187,16 +187,16 @@
 - すべてのテストがパスすることを確認
 
 #### 4-2: QuizContext（TDDサイクル）
-**【】QuizContextテスト作成（Red）**
-- `__tests__/context/QuizContext.test.tsx` 作成
-  - クイズ状態管理のテスト
-  - スコア更新のテスト
-  - クイズ切り替えロジックのテスト
-  - 回答処理のテスト
+**【✅】QuizContextテスト作成（Red）**
+- ✅ `__tests__/context/QuizContext.test.tsx` 作成
+  - ✅ クイズ状態管理のテスト
+  - ✅ スコア更新のテスト
+  - ✅ クイズ切り替えロジックのテスト
+  - ✅ 回答処理のテスト
 
-**【】QuizContext実装（Green）**
-- context/QuizContext.tsx
-- テストが通る最小限の実装
+**【✅】QuizContext実装（Green）**
+- ✅ context/QuizContext.tsx
+- ✅ テストが通る最小限の実装
 
 **【】QuizContextリファクタリング（Refactor）**
 - 状態管理の最適化
@@ -297,6 +297,22 @@
 - components/Settings/SettingsPanel.tsx
 
 **【】SettingsPanelリファクタリング（Refactor）**
+
+#### 5-5: モバイルUI最適化（追加タスク）
+**【】スマホ向けUI再設計（Red）**
+- StarField 操作用メニューの再配置（下部フローティングなど）
+- ボタン・トグルのタップ領域拡大（44px以上）
+- 片手操作ガイド・ヘルプ表示の検討
+
+**【】スマホ向けUI実装（Green）**
+- 操作用コンポーネントの実装
+- レスポンシブスタイル（Tailwindブレークポイント）の追加
+- モバイルタッチ操作の調整（オーバーレイなど）
+
+**【】スマホ向けUIリファクタリング（Refactor）**
+- 共通コンポーネント化（ボタン、トグルなど）
+- 可読性／アクセシビリティ改善
+- すべてのテストがパスすることを確認
 
 ---
 
