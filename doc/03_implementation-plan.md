@@ -458,6 +458,10 @@
 - ✅ `__tests__/performance/rendering.test.ts` で計測項目を test.todo として定義
 - ✅ `doc/performance/rendering-plan.md` に計測指標とケースを整理
 
+**【✅】パフォーマンス測定実装（Green）**
+- ✅ drawStarsObserver を導入し、描画時間を計測可能に
+- ✅ Jest ベースで標準負荷時の実測値を記録（doc/performance/results-20251019.md）
+
 **【✅】描画最適化実装（Green）**
 - ✅ 視野カリング実装
 - ✅ 等級フィルタリング

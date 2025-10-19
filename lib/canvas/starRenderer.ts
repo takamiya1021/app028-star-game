@@ -6,6 +6,7 @@ import {
   ProjectionMode,
   ObserverLocation,
 } from './coordinateUtils';
+import { getDrawStarsObserver, now as perfNow } from '@/performance/drawStarsObserver';
 import { drawCelestialGrid } from './gridRenderer';
 
 const BAYER_PATTERN = /Alp|Bet|Gam|Del|Eps|Zet|Eta|The|Iot|Kap|Lam|Mu |Nu |Xi |Omi|Pi |Rho|Sig|Tau|Ups|Phi|Chi|Psi|Ome/;
@@ -219,6 +220,9 @@ export function drawStars(
 
   const drawOrder = background.concat(highlighted);
 
+  const observerCallback = getDrawStarsObserver();
+  const start = observerCallback ? perfNow() : 0;
+
   for (const star of drawOrder) {
     const drawn = drawStar(
       ctx,
@@ -251,6 +255,10 @@ export function drawStars(
     ctx.fillText(`表示範囲:`, 15, 95);
     ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 115);
     ctx.fillText(`  ズーム: ${zoom.toFixed(1)}x`, 15, 135);
+  }
+
+  if (observerCallback) {
+    observerCallback(perfNow() - start, { count: visibleCount });
   }
 
   return visibleCount;
