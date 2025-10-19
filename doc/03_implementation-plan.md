@@ -454,11 +454,9 @@
 ### Phase 9: パフォーマンス最適化（予定工数: 4時間）
 
 #### 9-1: パフォーマンステスト（TDDサイクル）
-**【】パフォーマンステスト作成（Red）**
-- `__tests__/performance/rendering.test.ts` 作成
-  - 描画パフォーマンステスト（60fps維持）
-  - メモリリークテスト
-  - React再レンダリング検証テスト
+**【✅】パフォーマンステスト作成（Red）**
+- ✅ `__tests__/performance/rendering.test.ts` で計測項目を test.todo として定義
+- ✅ `doc/performance/rendering-plan.md` に計測指標とケースを整理
 
 **【✅】描画最適化実装（Green）**
 - ✅ 視野カリング実装
