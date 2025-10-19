@@ -1,5 +1,14 @@
 import { drawStars, clearStarRendererCaches } from '@/lib/canvas/starRenderer';
 import { setDrawStarsObserver } from '@/performance/drawStarsObserver';
+import { render, fireEvent, screen, waitFor } from '@testing-library/react';
+import Providers from '@/app/providers';
+import QuizContainer from '@/components/Quiz/QuizContainer';
+
+jest.mock('@/lib/data/quizGenerator', () => ({
+  generateQuiz: jest.fn(),
+}));
+
+const mockGenerateQuiz = jest.mocked(require('@/lib/data/quizGenerator').generateQuiz);
 
 function createStubContext(): CanvasRenderingContext2D {
   const noop = () => {};
@@ -85,5 +94,42 @@ describe('performance: drawStars', () => {
 });
 
 describe('performance: React rendering', () => {
-  test.todo('tracks QuizContainer re-render count during rapid updates');
+  it('tracks QuizContainer re-render count during rapid updates', async () => {
+    let renderCount = 0;
+    const quiz = {
+      id: 'quiz-1',
+      type: 'constellation',
+      questionType: 'description',
+      question: 'オリオン座はどれ？',
+      correctAnswer: 'Orion',
+      choices: ['Orion', 'Lyra', 'Cygnus', 'Cassiopeia'],
+      constellationId: 'Ori',
+      difficulty: 'easy',
+    } as const;
+
+    mockGenerateQuiz.mockResolvedValue(quiz);
+
+    function InstrumentedQuizContainer() {
+      renderCount += 1;
+      return <QuizContainer />;
+    }
+
+    render(
+      <Providers>
+        <InstrumentedQuizContainer />
+      </Providers>
+    );
+
+    await screen.findByText(quiz.question);
+
+    for (let i = 0; i < 5; i += 1) {
+      fireEvent.click(screen.getByTestId('choice-Orion'));
+      await waitFor(() => screen.getByText('正解！'));
+      fireEvent.click(screen.getByTestId('next-quiz-button'));
+      mockGenerateQuiz.mockResolvedValueOnce(quiz);
+      await waitFor(() => screen.getByText(quiz.question));
+    }
+
+    expect(renderCount).toBeLessThanOrEqual(20);
+  });
 });
