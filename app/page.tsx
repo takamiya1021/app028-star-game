@@ -232,13 +232,7 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-blue-100 shadow-inner">
-              <p className="font-semibold text-white">星の瞬き</p>
-              <p className="mt-1 text-xs">表示数: {visibleStarCount.toLocaleString()} 個</p>
-              <p className="text-xs text-blue-200">データ総数: {allStars.length.toLocaleString()} 件</p>
-            </div>
-
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={toggleMobileQuiz}

@@ -281,7 +281,7 @@ export default function StarField({
         projectionMode,
         projectionMode === 'stereographic' ? TOKYO_OBSERVER : undefined,
         {
-          skipOverlay: stars.length > 60000,
+          skipOverlay: false,
         }
       );
 
