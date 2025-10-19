@@ -7,26 +7,18 @@ import {
   ObserverLocation,
 } from './coordinateUtils';
 import { drawCelestialGrid } from './gridRenderer';
-
 /**
  * B-V色指数から星の色を計算
  * @param bv B-V色指数
  * @returns RGB hex色
  */
 function bvToColor(bv: number): string {
-  if (bv < -0.3) {
-    return '#9bb0ff'; // 青白い星（O,B型）
-  } else if (bv < 0) {
-    return '#cad7ff'; // 白い星（A型）
-  } else if (bv < 0.3) {
-    return '#fff4ea'; // 黄白い星（F型）
-  } else if (bv < 0.6) {
-    return '#fffaf0'; // 黄色い星（G型）
-  } else if (bv < 1.4) {
-    return '#ffd2a1'; // オレンジ色の星（K型）
-  } else {
-    return '#ff7f00'; // 赤い星（M型）
-  }
+  if (bv < -0.3) return '#9bb0ff';
+  if (bv < 0) return '#cad7ff';
+  if (bv < 0.3) return '#fff4ea';
+  if (bv < 0.6) return '#fffaf0';
+  if (bv < 1.4) return '#ffd2a1';
+  return '#ff7f00';
 }
 
 /**
@@ -64,12 +56,7 @@ export function drawStar(
     observer
   );
 
-  if (!screenPos) {
-    return false; // 画面外の星は描画しない
-  }
-
-  // vmag が null の場合はスキップ
-  if (star.vmag === null) {
+  if (!screenPos || star.vmag === null) {
     return false;
   }
 
@@ -176,6 +163,8 @@ export function drawStar(
  * @param observer 観測地点情報（ステレオ図法で使用）
  * @returns 実際に描画された星の数
  */
+const sortByMagnitude = (a: Star, b: Star) => (b.vmag ?? 99) - (a.vmag ?? 99);
+
 interface DrawStarsOptions {
   skipOverlay?: boolean;
   drawGrid?: boolean;
@@ -200,27 +189,38 @@ export function drawStars(
     drawCelestialGrid(ctx, viewCenter, zoom, canvasWidth, canvasHeight, projectionMode);
   }
 
-  // 有名な星（固有名がある星、または2等星以上）と普通の星を分ける
-  const famousStars = stars.filter(star => star.properName || (star.vmag !== null && star.vmag <= 2.0));
-  const normalStars = stars.filter(star => !star.properName && (star.vmag === null || star.vmag > 2.0));
+  const highlighted: Star[] = [];
+  const background: Star[] = [];
 
-  // 等級でソート（暗い星から描画して、明るい星を上に重ねる）
-  const sortedFamousStars = [...famousStars].sort((a, b) => (b.vmag ?? 99) - (a.vmag ?? 99));
-  const sortedNormalStars = [...normalStars].sort((a, b) => (b.vmag ?? 99) - (a.vmag ?? 99));
+  for (const star of stars) {
+    if (star.properName || (star.vmag !== null && star.vmag <= 2.0)) {
+      highlighted.push(star);
+    } else {
+      background.push(star);
+    }
+  }
+
+  background.sort(sortByMagnitude);
+  highlighted.sort(sortByMagnitude);
 
   let visibleCount = 0;
 
-  // 普通の星を先に描画
-  sortedNormalStars.forEach((star) => {
-    const drawn = drawStar(ctx, star, viewCenter, zoom, canvasWidth, canvasHeight, time, projectionMode, observer);
-    if (drawn) visibleCount++;
-  });
+  const drawOrder = background.concat(highlighted);
 
-  // 有名な星を後から描画（必ず上に重ねる）
-  sortedFamousStars.forEach((star) => {
-    const drawn = drawStar(ctx, star, viewCenter, zoom, canvasWidth, canvasHeight, time, projectionMode, observer);
+  for (const star of drawOrder) {
+    const drawn = drawStar(
+      ctx,
+      star,
+      viewCenter,
+      zoom,
+      canvasWidth,
+      canvasHeight,
+      time,
+      projectionMode,
+      observer
+    );
     if (drawn) visibleCount++;
-  });
+  }
 
   // 表示範囲の情報を画面に表示
   if (!skipOverlay) {

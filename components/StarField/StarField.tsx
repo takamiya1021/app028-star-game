@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Star } from '@/types/star';
 import { ProjectionMode, ObserverLocation } from '@/lib/canvas/coordinateUtils';
 import { drawStars } from '@/lib/canvas/starRenderer';
@@ -23,7 +23,7 @@ const TOKYO_OBSERVER: ObserverLocation = {
 
 export default function StarField({
   stars,
-  viewCenter: initialViewCenter = { ra: 180, dec: 0 }, // デフォルト：全天の中心
+  viewCenter: initialViewCenter = { ra: 180, dec: 0 },
   zoom: initialZoom = 1.5,
   className = '',
   onVisibleCountChange,
@@ -36,125 +36,117 @@ export default function StarField({
   const animationRef = useRef<number>();
   const visibleCountRef = useRef<number>(0);
 
-  // ピンチ操作用の状態
   const touchDistanceRef = useRef<number | null>(null);
-
-  // ドラッグ操作用の状態
   const isDraggingRef = useRef(false);
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  const zoomRef = useRef(initialZoom);
+  const projectionModeRef = useRef(projectionMode);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  useEffect(() => {
+    projectionModeRef.current = projectionMode;
+  }, [projectionMode]);
 
   // キャンバスサイズ調整
   useEffect(() => {
-    const updateCanvasSize = () => {
-      if (canvasRef.current) {
-        const container = canvasRef.current.parentElement;
-        if (container) {
-          setCanvasSize({
-            width: container.clientWidth,
-            height: container.clientHeight,
-          });
-        }
-      }
-    };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-
-    return () => {
-      window.removeEventListener('resize', updateCanvasSize);
-    };
-  }, []);
-
-  // マウスホイールでズーム
-  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const container = canvas.parentElement;
+    if (!container) return;
 
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-
-      setZoom((prevZoom) => {
-        const delta = e.deltaY > 0 ? -0.1 : 0.1; // ホイール下で縮小、上で拡大
-        const newZoom = prevZoom + delta;
-        return Math.max(0.5, Math.min(10.0, newZoom)); // 0.5倍〜10.0倍に制限
+    const updateSize = () => {
+      const { clientWidth, clientHeight } = container;
+      setCanvasSize({
+        width: clientWidth || 800,
+        height: clientHeight || 600,
       });
     };
 
-    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    updateSize();
 
-    return () => {
-      canvas.removeEventListener('wheel', handleWheel);
-    };
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateSize);
+      observer.observe(container);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // マウスドラッグで視野移動
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    setZoom((prev) => {
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const next = prev + delta;
+      return Math.max(0.5, Math.min(10.0, next));
+    });
+  }, []);
+
+  const handleMouseDown = useCallback((e: MouseEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    isDraggingRef.current = true;
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+    canvas.style.cursor = 'grabbing';
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingRef.current || !lastMousePosRef.current) return;
+
+    const currentZoom = zoomRef.current;
+    const mode = projectionModeRef.current;
+    const deltaX = e.clientX - lastMousePosRef.current.x;
+    const deltaY = e.clientY - lastMousePosRef.current.y;
+    const sensitivity = 0.2 / currentZoom;
+
+    const deltaRA = mode === 'stereographic' ? deltaX * sensitivity : -deltaX * sensitivity;
+    const deltaDec = deltaY * sensitivity;
+
+    setViewCenter((prev) => ({
+      ra: (prev.ra + deltaRA + 360) % 360,
+      dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)),
+    }));
+
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    const canvas = canvasRef.current;
+    isDraggingRef.current = false;
+    lastMousePosRef.current = null;
+    if (canvas) canvas.style.cursor = 'grab';
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    const canvas = canvasRef.current;
+    isDraggingRef.current = false;
+    lastMousePosRef.current = null;
+    if (canvas) canvas.style.cursor = 'grab';
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const handleMouseDown = (e: MouseEvent) => {
-      isDraggingRef.current = true;
-      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
-      canvas.style.cursor = 'grabbing';
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingRef.current || !lastMousePosRef.current) return;
-
-      const deltaX = e.clientX - lastMousePosRef.current.x;
-      const deltaY = e.clientY - lastMousePosRef.current.y;
-
-      // ドラッグの移動量を視野の移動に変換
-      const sensitivity = 0.2 / zoom; // ズームが大きいほど感度を下げる
-
-      // プラネタリウム（球の内側）= 基準座標系（星データそのまま）
-      // 宇宙シミュレーター（球の外側）= 鏡像（左右のみ反転）
-      let deltaRA: number;
-      let deltaDec: number;
-
-      if (projectionMode === 'stereographic') {
-        // プラネタリウム：基準座標系
-        deltaRA = deltaX * sensitivity;
-        deltaDec = deltaY * sensitivity;
-      } else {
-        // 宇宙シミュレーター：鏡像（左右反転、上下そのまま）
-        deltaRA = -deltaX * sensitivity;  // 左右反転
-        deltaDec = deltaY * sensitivity;   // 上下そのまま
-      }
-
-      setViewCenter((prev) => ({
-        ra: (prev.ra + deltaRA + 360) % 360, // 0〜360度でループ
-        dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)), // -90〜90度に制限
-      }));
-
-      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseUp = () => {
-      isDraggingRef.current = false;
-      lastMousePosRef.current = null;
-      canvas.style.cursor = 'grab';
-    };
-
-    const handleMouseLeave = () => {
-      isDraggingRef.current = false;
-      lastMousePosRef.current = null;
-      canvas.style.cursor = 'grab';
-    };
-
     canvas.style.cursor = 'grab';
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
+      canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [zoom, projectionMode]);
+  }, [handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave]);
 
   // タッチ操作でピンチズーム & スワイプ移動
   useEffect(() => {
@@ -165,17 +157,12 @@ export default function StarField({
 
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
-        // 2本指の距離を計算（ピンチズーム）
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
-        const distance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
+        const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
         touchDistanceRef.current = distance;
-        lastTouchPosRef.current = null; // スワイプ位置をリセット
+        lastTouchPosRef.current = null;
       } else if (e.touches.length === 1) {
-        // 1本指でスワイプ移動
         lastTouchPosRef.current = {
           x: e.touches[0].clientX,
           y: e.touches[0].clientY,
@@ -185,49 +172,23 @@ export default function StarField({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 2 && touchDistanceRef.current !== null) {
-        // 2本指ピンチズーム
         e.preventDefault();
-
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
-        const distance = Math.hypot(
-          touch2.clientX - touch1.clientX,
-          touch2.clientY - touch1.clientY
-        );
-
+        const distance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
         const scale = distance / touchDistanceRef.current;
+        touchDistanceRef.current = distance;
 
-        setZoom((prevZoom) => {
-          const newZoom = prevZoom * scale;
-          touchDistanceRef.current = distance;
-          return Math.max(0.5, Math.min(10.0, newZoom));
-        });
+        setZoom((prevZoom) => Math.max(0.5, Math.min(10.0, prevZoom * scale)));
       } else if (e.touches.length === 1 && lastTouchPosRef.current) {
-        // 1本指スワイプ移動
-        e.preventDefault();
-
         const deltaX = e.touches[0].clientX - lastTouchPosRef.current.x;
         const deltaY = e.touches[0].clientY - lastTouchPosRef.current.y;
-
-        const sensitivity = 0.2 / zoom;
-
-        // プラネタリウム（球の内側）= 基準座標系（星データそのまま）
-        // 宇宙シミュレーター（球の外側）= 鏡像（左右のみ反転）
-        let deltaRA: number;
-        let deltaDec: number;
-
-        if (projectionMode === 'stereographic') {
-          // プラネタリウム：基準座標系
-          deltaRA = deltaX * sensitivity;
-          deltaDec = deltaY * sensitivity;
-        } else {
-          // 宇宙シミュレーター：鏡像（左右反転、上下そのまま）
-          deltaRA = -deltaX * sensitivity;  // 左右反転
-          deltaDec = deltaY * sensitivity;   // 上下そのまま
-        }
+        const sensitivity = 0.2 / zoomRef.current;
+        const deltaRA = deltaX * sensitivity;
+        const deltaDec = deltaY * sensitivity;
 
         setViewCenter((prev) => ({
-          ra: (prev.ra + deltaRA + 360) % 360,
+          ra: (prev.ra - deltaRA + 360) % 360,
           dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)),
         }));
 
@@ -256,7 +217,7 @@ export default function StarField({
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [zoom, projectionMode]);
+  }, []);
 
   // 星空アニメーション
   useEffect(() => {
@@ -271,11 +232,9 @@ export default function StarField({
     const animate = () => {
       const time = Date.now() - startTime;
 
-      // キャンバスクリア
-      ctx.fillStyle = '#000814'; // 深い青黒
+      ctx.fillStyle = '#000814';
       ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-      // 星を描画
       const visibleCount = drawStars(
         ctx,
         stars,
@@ -285,10 +244,12 @@ export default function StarField({
         canvasSize.height,
         time,
         projectionMode,
-        projectionMode === 'stereographic' ? TOKYO_OBSERVER : undefined
+        projectionMode === 'stereographic' ? TOKYO_OBSERVER : undefined,
+        {
+          skipOverlay: stars.length > 60000,
+        }
       );
 
-      // 表示された星の数が変わったら親に通知
       if (visibleCount !== visibleCountRef.current) {
         visibleCountRef.current = visibleCount;
         onVisibleCountChange?.(visibleCount);
@@ -311,7 +272,7 @@ export default function StarField({
       ref={canvasRef}
       width={canvasSize.width}
       height={canvasSize.height}
-      className={`${className}`}
+      className={className}
       style={{ display: 'block' }}
     />
   );
