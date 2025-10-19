@@ -23,8 +23,8 @@ async function fetchJson<T>(path: string, fetcher?: JsonFetcher): Promise<T> {
   }
 
   if (path === STARS_DATA_PATH) {
-    const module = await import('@/public/data/stars.json');
-    return module.default as T;
+    const dataModule = await import('@/public/data/stars.json');
+    return dataModule.default as T;
   }
 
   throw new Error(`Unable to load ${path}`);

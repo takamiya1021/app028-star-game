@@ -20,8 +20,8 @@ async function fetchJson<T>(path: string, fetcher?: JsonFetcher): Promise<T> {
   }
 
   if (path === CONSTELLATION_LINES_PATH) {
-    const module = await import('@/public/data/constellation-lines.json');
-    return module.default as T;
+    const dataModule = await import('@/public/data/constellation-lines.json');
+    return dataModule.default as T;
   }
 
   throw new Error(`Unable to load ${path}`);

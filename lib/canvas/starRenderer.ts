@@ -176,6 +176,11 @@ export function drawStar(
  * @param observer 観測地点情報（ステレオ図法で使用）
  * @returns 実際に描画された星の数
  */
+interface DrawStarsOptions {
+  skipOverlay?: boolean;
+  drawGrid?: boolean;
+}
+
 export function drawStars(
   ctx: CanvasRenderingContext2D,
   stars: Star[],
@@ -185,10 +190,15 @@ export function drawStars(
   canvasHeight: number,
   time: number,
   projectionMode: ProjectionMode = 'orthographic',
-  observer?: ObserverLocation
+  observer?: ObserverLocation,
+  options: DrawStarsOptions = {}
 ): number {
+  const { skipOverlay = false, drawGrid = true } = options;
+
   // 天球グリッドを先に描画（星の下に）
-  drawCelestialGrid(ctx, viewCenter, zoom, canvasWidth, canvasHeight, projectionMode);
+  if (drawGrid) {
+    drawCelestialGrid(ctx, viewCenter, zoom, canvasWidth, canvasHeight, projectionMode);
+  }
 
   // 有名な星（固有名がある星、または2等星以上）と普通の星を分ける
   const famousStars = stars.filter(star => star.properName || (star.vmag !== null && star.vmag <= 2.0));
@@ -213,23 +223,23 @@ export function drawStars(
   });
 
   // 表示範囲の情報を画面に表示
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.fillRect(5, 5, 350, 150);
+  if (!skipOverlay) {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(5, 5, 350, 150);
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '16px monospace';
-  ctx.fillText(`📊 表示情報`, 15, 25);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '16px monospace';
+    ctx.fillText(`📊 表示情報`, 15, 25);
 
-  ctx.font = '14px monospace';
-  ctx.fillText(`星の数: ${visibleCount} / ${stars.length}`, 15, 50);
-  ctx.fillText(`視野中心: 赤経 ${viewCenter.ra}° / 赤緯 ${viewCenter.dec}°`, 15, 70);
+    ctx.font = '14px monospace';
+    ctx.fillText(`星の数: ${visibleCount} / ${stars.length}`, 15, 50);
+    ctx.fillText(`視野中心: 赤経 ${viewCenter.ra}° / 赤緯 ${viewCenter.dec}°`, 15, 70);
 
-  // 表示範囲を計算（正射図法用）
-  const fov = 90 / zoom; // 視野角
-
-  ctx.fillText(`表示範囲:`, 15, 95);
-  ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 115);
-  ctx.fillText(`  ズーム: ${zoom.toFixed(1)}x`, 15, 135);
+    const fov = 90 / zoom; // 視野角
+    ctx.fillText(`表示範囲:`, 15, 95);
+    ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 115);
+    ctx.fillText(`  ズーム: ${zoom.toFixed(1)}x`, 15, 135);
+  }
 
   return visibleCount;
 }
