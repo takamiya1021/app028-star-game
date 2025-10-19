@@ -3,8 +3,8 @@
 export type ObservationMode = 'naked-eye' | 'telescope';
 
 export const OBSERVATION_MODE_LABELS = {
-  'naked-eye': '肉眼',
-  'telescope': '望遠鏡',
+  'naked-eye': '肉眼観測',
+  'telescope': '高感度望遠鏡',
 } as const;
 
 export const OBSERVATION_MODE_DESCRIPTIONS = {

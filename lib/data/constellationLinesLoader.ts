@@ -1,38 +1,19 @@
 import type { ConstellationLine } from '@/types/constellation';
+import { createCachedJsonLoader, JsonFetcher } from './cachedJsonLoader';
 
 const CONSTELLATION_LINES_PATH = '/data/constellation-lines.json';
 
 export interface LoadConstellationLinesOptions {
-  fetcher?: typeof fetch;
+  fetcher?: JsonFetcher;
 }
 
-type JsonFetcher = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
-
-let constellationLinesCache: ConstellationLine[] | null = null;
-
-async function fetchJson<T>(path: string, fetcher?: JsonFetcher): Promise<T> {
-  if (fetcher) {
-    const response = await fetcher(path);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${path}: ${response.status} ${response.statusText}`);
-    }
-    return (await response.json()) as T;
-  }
-
-  if (path === CONSTELLATION_LINES_PATH) {
-    const dataModule = await import('@/public/data/constellation-lines.json');
-    return dataModule.default as T;
-  }
-
-  throw new Error(`Unable to load ${path}`);
-}
+const constellationLinesLoader = createCachedJsonLoader<ConstellationLine[]>({
+  path: CONSTELLATION_LINES_PATH,
+  importData: () => import('@/public/data/constellation-lines.json'),
+});
 
 async function ensureConstellationLines(fetcher?: JsonFetcher): Promise<ConstellationLine[]> {
-  if (!constellationLinesCache) {
-    const data = await fetchJson<ConstellationLine[]>(CONSTELLATION_LINES_PATH, fetcher);
-    constellationLinesCache = data;
-  }
-  return constellationLinesCache;
+  return constellationLinesLoader.load(fetcher);
 }
 
 export async function loadConstellationLines(
@@ -43,5 +24,5 @@ export async function loadConstellationLines(
 }
 
 export function clearConstellationLinesCache(): void {
-  constellationLinesCache = null;
+  constellationLinesLoader.clear();
 }

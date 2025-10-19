@@ -87,11 +87,11 @@
 - ✅ lib/data/constellationLinesLoader.ts
 - ✅ テストが通る最小限の実装
 
-**【】データローダーリファクタリング（Refactor）**
-- エラーハンドリング追加
-- 型安全性の向上
-- パフォーマンス最適化
-- すべてのテストがパスすることを確認
+**【✅】データローダーリファクタリング（Refactor）**
+- ✅ 共通キャッシュユーティリティ（createCachedJsonLoader）導入
+- ✅ fetcher経由時のHTTPエラーを明示化
+- ✅ 星・星座・星座線ローダーでキャッシュクリアAPIを統一
+- ✅ 既存テストパスを確認
 
 ---
 
@@ -112,10 +112,10 @@
 - ✅ テストが通る最小限の実装
 - ✅ 2つの投影法実装
 
-**【】座標変換リファクタリング（Refactor）**
-- パフォーマンス最適化
-- コードの可読性向上
-- すべてのテストがパスすることを確認
+**【✅】座標変換リファクタリング（Refactor）**
+- ✅ 角度変換・正規化ヘルパーを導入し重複計算を削減
+- ✅ 三角関数結果の再利用で演算量を抑制
+- ✅ `coordinateUtils.test.ts` を再実行し回帰なしを確認
 
 #### 3-2: 星描画ロジック（TDDサイクル）
 **【✅】星描画テスト作成（Red）**
@@ -136,8 +136,8 @@
 - ✅ すべてのテストがパスすることを確認
 
 #### 3-3: StarFieldコンポーネント（TDDサイクル）
-**【】StarFieldテスト作成（Red）**
-- `__tests__/components/StarField/StarField.test.tsx` 作成
+**【✅】StarFieldテスト作成（Red）**
+- ✅ `__tests__/components/StarField/StarField.test.tsx` 作成
   - ✅ コンポーネントのレンダリングテスト
   - ✅ ズーム機能のテスト
   - ✅ パン機能のテスト
@@ -181,10 +181,10 @@
 - ✅ lib/data/quizGenerator.ts
 - ✅ テストが通る最小限の実装
 
-**【】クイズ生成リファクタリング（Refactor）**
-- アルゴリズムの最適化
-- コードの可読性向上
-- すべてのテストがパスすることを確認
+**【✅】クイズ生成リファクタリング（Refactor）**
+- ✅ ランダム抽出ヘルパー・星名取得ヘルパーを導入して重複ロジックを除去
+- ✅ 余分な配列生成を削減しつつ挙動を維持
+- ✅ `quizGenerator.test.ts` で回帰なしを確認
 
 #### 4-2: QuizContext（TDDサイクル）
 **【✅】QuizContextテスト作成（Red）**
@@ -198,9 +198,10 @@
 - ✅ context/QuizContext.tsx
 - ✅ テストが通る最小限の実装
 
-**【】QuizContextリファクタリング（Refactor）**
-- 状態管理の最適化
-- すべてのテストがパスすることを確認
+**【✅】QuizContextリファクタリング（Refactor）**
+- ✅ アクションディスパッチの安定化（useCallbackでラップ）
+- ✅ 二重ロード防止と未マウント状態の更新防止をQuizContainer側で実装
+- ✅ テストの追加で再入防止とエッジケースを検証
 
 #### 4-3: SettingsContext（TDDサイクル）
 **【✅】SettingsContextテスト作成（Red）**
@@ -211,108 +212,123 @@
 **【✅】SettingsContext実装（Green）**
 - ✅ context/SettingsContext.tsx
 
-**【】SettingsContextリファクタリング（Refactor）**
+**【✅】SettingsContextリファクタリング（Refactor）**
+- ✅ 設定更新時のバリデーション追加（不正値の除外）
+- ✅ 既存テスト拡張で制約チェックを自動化
 
 #### 4-4: クイズUIコンポーネント（TDDサイクル）
-**【】QuizContainerテスト作成（Red）**
-- `__tests__/components/Quiz/QuizContainer.test.tsx`
-  - クイズフロー制御のテスト
-  - スコア管理のテスト
+**【✅】QuizContainerテスト作成（Red）**
+- ✅ `__tests__/components/Quiz/QuizContainer.test.tsx`
+  - ✅ クイズフロー制御のテスト
+  - ✅ スコア管理とエラーハンドリングのテスト
 
-**【】QuizQuestionテスト作成（Red）**
-- `__tests__/components/Quiz/QuizQuestion.test.tsx`
-  - 問題文表示のテスト
-  - 星空・イラスト表示のテスト
+**【✅】QuizQuestionテスト作成（Red）**
+- ✅ `__tests__/components/Quiz/QuizQuestion.test.tsx`
+  - ✅ 問題文表示のテスト
+  - ✅ ビジュアルヒント案内のテスト
 
-**【】QuizChoicesテスト作成（Red）**
-- `__tests__/components/Quiz/QuizChoices.test.tsx`
-  - 選択肢ボタン表示のテスト
-  - 回答処理のテスト
-  - 正解・不正解フィードバックのテスト
+**【✅】QuizChoicesテスト作成（Red）**
+- ✅ `__tests__/components/Quiz/QuizChoices.test.tsx`
+  - ✅ 選択肢ボタン表示のテスト
+  - ✅ 回答処理のテスト
+  - ✅ 選択状態フィードバックのテスト
 
-**【】QuizResultテスト作成（Red）**
-- `__tests__/components/Quiz/QuizResult.test.tsx`
-  - 結果表示のテスト
-  - 「詳しく見る」ボタンのテスト
+**【✅】QuizResultテスト作成（Red）**
+- ✅ `__tests__/components/Quiz/QuizResult.test.tsx`
+  - ✅ 結果表示のテスト
+  - ✅ 次のクイズへボタンのテスト
 
-**【】クイズUIコンポーネント実装（Green）**
-- components/Quiz/QuizContainer.tsx
-- components/Quiz/QuizQuestion.tsx
-- components/Quiz/QuizChoices.tsx
-- components/Quiz/QuizResult.tsx
+**【✅】クイズUIコンポーネント実装（Green）**
+- ✅ components/Quiz/QuizContainer.tsx
+- ✅ components/Quiz/QuizQuestion.tsx
+- ✅ components/Quiz/QuizChoices.tsx
+- ✅ components/Quiz/QuizResult.tsx
 
-**【】クイズUIリファクタリング（Refactor）**
-- コンポーネント分割の最適化
-- すべてのテストがパスすることを確認
+**【✅】クイズUIリファクタリング（Refactor）**
+- ✅ QuizContainerのロード多重起動防止・未マウントガード追加
+- ✅ 次へボタン多重クリック時のテスト追加
+- ✅ 状態遷移のテストカバレッジ拡充
 
 ---
 
 ### Phase 5: UI/UXコンポーネント実装（予定工数: 7時間）
 
 #### 5-1: ScoreDisplayコンポーネント（TDDサイクル）
-**【】ScoreDisplayテスト作成（Red）**
-- `__tests__/components/Score/ScoreDisplay.test.tsx` 作成
-  - スコア表示のテスト
-  - 正解率パーセント表示のテスト
-  - ビジュアル更新のテスト
+**【✅】ScoreDisplayテスト作成（Red）**
+- ✅ `__tests__/components/Score/ScoreDisplay.test.tsx` 作成
+  - ✅ スコア表示のテスト
+  - ✅ 正解率パーセント表示のテスト
+  - ✅ ストリーク表示のテスト
 
-**【】ScoreDisplay実装（Green）**
-- components/Score/ScoreDisplay.tsx
+**【✅】ScoreDisplay実装（Green）**
+- ✅ components/Score/ScoreDisplay.tsx
+- ✅ パーセント／プログレスバー描画
 
-**【】ScoreDisplayリファクタリング（Refactor）**
+**【✅】ScoreDisplayリファクタリング（Refactor）**
+- ✅ ラベル／クラス名カスタマイズ対応
+- ✅ パーセント計算の安全化・ヘルパー抽出
 
 #### 5-2: ConstellationDetailコンポーネント（TDDサイクル）
-**【】ConstellationDetailテスト作成（Red）**
-- `__tests__/components/DetailModal/ConstellationDetail.test.tsx`
-  - 星座情報表示のテスト
-  - 神話・由来表示のテスト
-  - 主要な星リスト表示のテスト
+**【✅】ConstellationDetailテスト作成（Red）**
+- ✅ `__tests__/components/DetailModal/ConstellationDetail.test.tsx`
+  - ✅ 星座情報表示のテスト
+  - ✅ 神話・由来表示のテスト
+  - ✅ 主要な星リスト表示のテスト
 
-**【】ConstellationDetail実装（Green）**
-- components/DetailModal/ConstellationDetail.tsx
+**【✅】ConstellationDetail実装（Green）**
+- ✅ components/DetailModal/ConstellationDetail.tsx
+- ✅ 半球ラベル・難易度表示・恒星リスト整備
 
-**【】ConstellationDetailリファクタリング（Refactor）**
+**【✅】ConstellationDetailリファクタリング（Refactor）**
+- ✅ DetailSectionコンポーネント導入でUI構造を共通化
+- ✅ 恒星リスト生成・ラベル算出をuseMemo化
 
 #### 5-3: StarDetailコンポーネント（TDDサイクル）
-**【】StarDetailテスト作成（Red）**
-- `__tests__/components/DetailModal/StarDetail.test.tsx`
-  - 固有名情報表示のテスト
-  - スペクトル型・等級・距離表示のテスト
-  - 所属星座情報表示のテスト
+**【✅】StarDetailテスト作成（Red）**
+- ✅ `__tests__/components/DetailModal/StarDetail.test.tsx`
+  - ✅ 固有名情報表示のテスト
+  - ✅ スペクトル型・等級・距離表示のテスト
+  - ✅ 所属星座情報表示のテスト
 
-**【】StarDetail実装（Green）**
-- components/DetailModal/StarDetail.tsx
+**【✅】StarDetail実装（Green）**
+- ✅ components/DetailModal/StarDetail.tsx
+- ✅ 距離換算ロジック・識別番号表示を実装
 
-**【】StarDetailリファクタリング（Refactor）**
+**【✅】StarDetailリファクタリング（Refactor）**
+- ✅ DetailSection再利用でレイアウト統一
+- ✅ 識別番号／スペクトル情報のフォーマットをuseMemoに集約
 
 #### 5-4: SettingsPanelコンポーネント（TDDサイクル）
-**【】SettingsPanelテスト作成（Red）**
-- `__tests__/components/Settings/SettingsPanel.test.tsx`
-  - カテゴリー選択UIのテスト
-  - 難易度選択UIのテスト
-  - 出題数設定UIのテスト
-  - 音声ON/OFF切り替えのテスト
+**【✅】SettingsPanelテスト作成（Red）**
+- ✅ `__tests__/components/Settings/SettingsPanel.test.tsx`
+  - ✅ カテゴリー選択UIのテスト
+  - ✅ 難易度選択UIのテスト
+  - ✅ 出題数設定UIのテスト
+  - ✅ 音声ON/OFF切り替えのテスト
 
-**【】SettingsPanel実装（Green）**
-- components/Settings/SettingsPanel.tsx
+**【✅】SettingsPanel実装（Green）**
+- ✅ components/Settings/SettingsPanel.tsx
+- ✅ 設定リセットボタンとコンテキスト連携を実装
 
-**【】SettingsPanelリファクタリング（Refactor）**
+**【✅】SettingsPanelリファクタリング（Refactor）**
+- ✅ セレクト項目を定数化して再利用性向上
+- ✅ UI構造は現状維持でコンテキスト連携の簡潔化を確認
 
 #### 5-5: モバイルUI最適化（追加タスク）
-**【】スマホ向けUI再設計（Red）**
-- StarField 操作用メニューの再配置（下部フローティングなど）
-- ボタン・トグルのタップ領域拡大（44px以上）
-- 片手操作ガイド・ヘルプ表示の検討
+**【✅】スマホ向けUI再設計（Red）**
+- ✅ StarField操作系をボトムドックへ再配置（ワンハンド操作対応）
+- ✅ ボタン／トグルを44px以上のタップ領域に拡大
+- ✅ クイズアクセス導線をモバイルモーダル化
 
-**【】スマホ向けUI実装（Green）**
-- 操作用コンポーネントの実装
-- レスポンシブスタイル（Tailwindブレークポイント）の追加
-- モバイルタッチ操作の調整（オーバーレイなど）
+**【✅】スマホ向けUI実装（Green）**
+- ✅ ボトムコントロールドック実装（投影・観測切替／星数表示）
+- ✅ モバイル専用クイズモーダルとスコア表示を追加
+- ✅ レスポンシブレイアウトの調整（Tailwindブレークポイント適用）
 
-**【】スマホ向けUIリファクタリング（Refactor）**
-- 共通コンポーネント化（ボタン、トグルなど）
-- 可読性／アクセシビリティ改善
-- すべてのテストがパスすることを確認
+**【✅】スマホ向けUIリファクタリング（Refactor）**
+- ✅ 操作用UIを共通スタイル化＆アクセシビリティ属性付与
+- ✅ スコア・クイズ表示をdesktop/mobileで共通ロジック化
+- ✅ 全テスト通過を確認
 
 ---
 
@@ -331,13 +347,12 @@
 - ✅ フォント読み込み
 
 #### 6-2: トップページ（TDDサイクル）
-**【】トップページテスト作成（Red）**
-- `__tests__/app/page.test.tsx` 作成
-  - ページレンダリングのテスト
-  - StarField配置のテスト
-  - 投影モード切り替えのテスト
-  - 観測モード切り替えのテスト
-  - QuizContainer統合のテスト
+**【✅】トップページテスト作成（Red）**
+- ✅ `__tests__/app/page.test.tsx` 作成
+  - ✅ ページレンダリングのテスト
+  - ✅ StarField配置のテスト
+  - ✅ 投影モード・観測モード切り替えテスト
+  - ✅ QuizContainer統合のテスト
 
 **【✅】トップページ実装（Green）**
 - ✅ app/page.tsx
@@ -348,43 +363,50 @@
 - QuizContainer統合
 - ScoreDisplay配置
 
-**【】トップページリファクタリング（Refactor）**
+**【✅】トップページリファクタリング（Refactor）**
+- ✅ モバイルドック／デスクトップサイドパネルの二軸構成へ再整理
+- ✅ ScoreDisplay・QuizContainerのUI統合を実施
+- ✅ useBreakpoint導入でモーダル挙動をブレークポイント連動化
 
 #### 6-3: 設定画面（TDDサイクル）
-**【】設定画面テスト作成（Red）**
-- `__tests__/app/settings/page.test.tsx`
-  - ページレンダリングのテスト
-  - SettingsPanel配置のテスト
+**【✅】設定画面テスト作成（Red）**
+- ✅ `__tests__/app/settings/page.test.tsx`
+  - ✅ ページレンダリングのテスト
+  - ✅ SettingsPanel配置のテスト
 
-**【】設定画面実装（Green）**
-- app/settings/page.tsx
+**【✅】設定画面実装（Green）**
+- ✅ app/settings/page.tsx
+- ✅ SettingsPanelの埋め込みとメタ情報の定義
 
-**【】設定画面リファクタリング（Refactor）**
+**【✅】設定画面リファクタリング（Refactor）**
+- ✅ PageHeaderコンポーネント導入でレイアウト共通化
+- ✅ UI構造を簡潔化しアクセシビリティを確認
 
 #### 6-4: 図鑑モード（TDDサイクル）
-**【】図鑑モードテスト作成（Red）**
-- `__tests__/app/encyclopedia/page.test.tsx`
-  - ページレンダリングのテスト
-  - 星座・星リスト表示のテスト
-  - 詳細モーダル表示のテスト
+**【✅】図鑑モードテスト作成（Red）**
+- ✅ `__tests__/app/encyclopedia/page.test.tsx`
+  - ✅ ページレンダリングのテスト
+  - ✅ 星座・星リスト表示のテスト
+  - ✅ 詳細モーダル表示のテスト
 
-**【】図鑑モード実装（Green）**
-- app/encyclopedia/page.tsx
+**【✅】図鑑モード実装（Green）**
+- ✅ app/encyclopedia/page.tsx
+- ✅ app/encyclopedia/EncyclopediaClient.tsx（ConstellationDetail/StarDetail再利用）
 
-**【】図鑑モードリファクタリング（Refactor）**
+**【✅】図鑑モードリファクタリング（Refactor）**
+- ✅ PageHeader再利用とConstellationModal抽出で責務分離
+- ✅ 星座カード／モーダルのアクセシビリティ属性を整理
 
 ---
 
 ### Phase 7: レスポンシブデザイン実装（予定工数: 4時間）
 
 #### 7-1: レスポンシブデザインテスト（TDDサイクル）
-**【】レスポンシブテスト作成（Red）**
-- `__tests__/responsive/layout.test.tsx` 作成
-  - スマホ縦持ちレイアウトのテスト
-  - スマホ横持ちレイアウトのテスト
-  - タブレットレイアウトのテスト
-  - PCレイアウトのテスト
-  - ブレークポイント切り替えのテスト
+**【✅】レスポンシブテスト作成（Red）**
+- ✅ `__tests__/responsive/layout.test.tsx` 作成
+  - ✅ 主要ページのレスポンシブclass確認テスト
+  - ✅ クイズ操作ドックのブレークポイント検証
+  - ✅ 図鑑モーダル表示時のレイアウト確認
 
 **【✅】レスポンシブ実装（Green）**（実装済み）
 - ✅ Tailwind CSS設定でブレークポイント定義
@@ -393,9 +415,10 @@
 - ✅ タブレットレイアウト
 - ✅ PCレイアウト
 
-**【】レスポンシブリファクタリング（Refactor）**
-- レイアウトコンポーネント抽出
-- すべてのテストがパスすることを確認
+**【✅】レスポンシブリファクタリング（Refactor）**
+- ✅ PageHeader・ConstellationModalでレイアウト共通化
+- ✅ ボトムドックの挙動を `useBreakpoint` で自動調整（モバイル→デスクトップ切替時にモーダル自動クローズ）
+- ✅ 新規レスポンシブテストと既存スイートがすべてパスすることを確認
 
 ---
 

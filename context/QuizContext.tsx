@@ -1,9 +1,9 @@
 'use client';
 
-import { createContext, useContext, useMemo, useReducer } from 'react';
+import { createContext, useCallback, useContext, useMemo, useReducer } from 'react';
 import type { Quiz } from '@/types/quiz';
 
-interface QuizHistoryItem {
+export interface QuizHistoryItem {
   quiz: Quiz;
   answer: string;
   isCorrect: boolean;
@@ -70,12 +70,24 @@ const QuizContext = createContext<QuizContextValue | undefined>(undefined);
 export function QuizProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
 
+  const setNewQuiz = useCallback((quiz: Quiz) => {
+    dispatch({ type: 'SET_NEW_QUIZ', quiz });
+  }, []);
+
+  const submitAnswer = useCallback((answer: string) => {
+    dispatch({ type: 'SUBMIT_ANSWER', answer });
+  }, []);
+
+  const reset = useCallback(() => {
+    dispatch({ type: 'RESET' });
+  }, []);
+
   const value = useMemo<QuizContextValue>(() => ({
     ...state,
-    setNewQuiz: (quiz) => dispatch({ type: 'SET_NEW_QUIZ', quiz }),
-    submitAnswer: (answer) => dispatch({ type: 'SUBMIT_ANSWER', answer }),
-    reset: () => dispatch({ type: 'RESET' }),
-  }), [state]);
+    setNewQuiz,
+    submitAnswer,
+    reset,
+  }), [state, setNewQuiz, submitAnswer, reset]);
 
   return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;
 }

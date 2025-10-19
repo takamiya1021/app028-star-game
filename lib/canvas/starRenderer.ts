@@ -7,6 +7,48 @@ import {
   ObserverLocation,
 } from './coordinateUtils';
 import { drawCelestialGrid } from './gridRenderer';
+
+const BAYER_PATTERN = /Alp|Bet|Gam|Del|Eps|Zet|Eta|The|Iot|Kap|Lam|Mu |Nu |Xi |Omi|Pi |Rho|Sig|Tau|Ups|Phi|Chi|Psi|Ome/;
+
+const BAYER_TO_GREEK: Record<string, string> = {
+  Alp: 'α', Bet: 'β', Gam: 'γ', Del: 'δ',
+  Eps: 'ε', Zet: 'ζ', Eta: 'η', The: 'θ',
+  Iot: 'ι', Kap: 'κ', Lam: 'λ', 'Mu ': 'μ',
+  'Nu ': 'ν', 'Xi ': 'ξ', 'Omi': 'ο', 'Pi ': 'π',
+  'Rho': 'ρ', 'Sig': 'σ', 'Tau': 'τ', Ups: 'υ',
+  Phi: 'φ', Chi: 'χ', Psi: 'ψ', Ome: 'ω',
+};
+
+const starLabelCache = new Map<number, string | null>();
+
+function deriveStarLabel(star: Star): string | null {
+  if (star.vmag == null || star.vmag > 3.0) {
+    return null;
+  }
+
+  if (star.properName) {
+    return star.properName;
+  }
+
+  if (star.name && BAYER_PATTERN.test(star.name)) {
+    for (const [abbr, greek] of Object.entries(BAYER_TO_GREEK)) {
+      if (star.name.includes(abbr)) {
+        return greek;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getStarLabel(star: Star): string | null {
+  if (starLabelCache.has(star.id)) {
+    return starLabelCache.get(star.id) ?? null;
+  }
+  const label = deriveStarLabel(star);
+  starLabelCache.set(star.id, label);
+  return label;
+}
 /**
  * B-V色指数から星の色を計算
  * @param bv B-V色指数
@@ -102,37 +144,7 @@ export function drawStar(
   }
 
   // 星の名前を描画（等級が3.0以下で、固有名またはバイエル符号がある場合）
-  let label: string | null = null;
-
-  // 固有名（カタカナ）を最優先
-  if (star.vmag <= 3.0 && star.properName) {
-    label = star.properName;
-  }
-  // 固有名がない場合はバイエル符号を表示（フラムスティード番号は除外）
-  else if (star.vmag <= 3.0 && star.name) {
-    // バイエル符号のパターン（Alp, Bet, Gam等）が含まれているかチェック
-    const bayerPattern = /Alp|Bet|Gam|Del|Eps|Zet|Eta|The|Iot|Kap|Lam|Mu |Nu |Xi |Omi|Pi |Rho|Sig|Tau|Ups|Phi|Chi|Psi|Ome/;
-
-    if (bayerPattern.test(star.name)) {
-      // ギリシャ文字部分のみを抽出して表示（例: "11Bet Cas" → "β", "9Alp CMa" → "α"）
-      const greekMap: { [key: string]: string } = {
-        'Alp': 'α', 'Bet': 'β', 'Gam': 'γ', 'Del': 'δ',
-        'Eps': 'ε', 'Zet': 'ζ', 'Eta': 'η', 'The': 'θ',
-        'Iot': 'ι', 'Kap': 'κ', 'Lam': 'λ', 'Mu': 'μ',
-        'Nu': 'ν', 'Xi': 'ξ', 'Omi': 'ο', 'Pi': 'π',
-        'Rho': 'ρ', 'Sig': 'σ', 'Tau': 'τ', 'Ups': 'υ',
-        'Phi': 'φ', 'Chi': 'χ', 'Psi': 'ψ', 'Ome': 'ω'
-      };
-
-      // ギリシャ文字略号を検索して変換
-      for (const [abbr, greek] of Object.entries(greekMap)) {
-        if (star.name.includes(abbr)) {
-          label = greek;
-          break;
-        }
-      }
-    }
-  }
+  const label = getStarLabel(star);
 
   if (label) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // 少し透明な白
@@ -242,4 +254,8 @@ export function drawStars(
   }
 
   return visibleCount;
+}
+
+export function clearStarRendererCaches(): void {
+  starLabelCache.clear();
 }

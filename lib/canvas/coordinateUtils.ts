@@ -2,6 +2,40 @@
 
 export type ProjectionMode = 'orthographic' | 'stereographic';
 
+const DEG2RAD = Math.PI / 180;
+const RAD2DEG = 180 / Math.PI;
+const OFFSCREEN_MARGIN = 100;
+
+function degToRad(value: number): number {
+  return value * DEG2RAD;
+}
+
+function radToDeg(value: number): number {
+  return value * RAD2DEG;
+}
+
+function normalizeDegrees(value: number): number {
+  let result = value % 360;
+  if (result < 0) result += 360;
+  return result;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function computeScale(zoom: number, canvasWidth: number, canvasHeight: number): { scale: number; fov: number } {
+  const fov = 90 / zoom;
+  const scale = Math.min(canvasWidth, canvasHeight) / 2 / Math.tan((fov * DEG2RAD) / 2);
+  return { scale, fov };
+}
+
+function normalizedDeltaDegrees(value: number): number {
+  let delta = (value + 180) % 360 - 180;
+  if (delta < -180) delta += 360;
+  return delta;
+}
+
 /**
  * 観測地点の情報
  */
@@ -62,16 +96,9 @@ function getLocalSiderealTime(date: Date, longitude: number): number {
   let gst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) +
             t * t * (0.000387933 - t / 38710000.0);
 
-  // 0-360度に正規化
-  gst = gst % 360;
-  if (gst < 0) gst += 360;
-
   // 地方恒星時 = グリニッジ恒星時 + 経度
-  let lst = gst + longitude;
-  lst = lst % 360;
-  if (lst < 0) lst += 360;
-
-  return lst;
+  const lst = gst + longitude;
+  return normalizeDegrees(lst);
 }
 
 /**
@@ -86,24 +113,31 @@ export function equatorialToHorizontal(
   dec: number,
   observer: ObserverLocation
 ): HorizontalCoordinates {
-  const lat = observer.latitude * Math.PI / 180;
+  const latRad = degToRad(observer.latitude);
   const lst = getLocalSiderealTime(observer.date, observer.longitude);
 
   // 時角 = 地方恒星時 - 赤経
-  let ha = lst - ra;
-  if (ha < 0) ha += 360;
-  const haRad = ha * Math.PI / 180;
-  const decRad = dec * Math.PI / 180;
+  const haRad = degToRad(normalizeDegrees(lst - ra));
+  const decRad = degToRad(dec);
 
   // 高度の計算
-  const sinAlt = Math.sin(lat) * Math.sin(decRad) +
-                 Math.cos(lat) * Math.cos(decRad) * Math.cos(haRad);
-  const altitude = Math.asin(sinAlt) * 180 / Math.PI;
+  const sinLat = Math.sin(latRad);
+  const cosLat = Math.cos(latRad);
+  const sinDec = Math.sin(decRad);
+  const cosDec = Math.cos(decRad);
+  const sinAlt = sinLat * sinDec + cosLat * cosDec * Math.cos(haRad);
+  const altitudeRad = Math.asin(clamp(sinAlt, -1, 1));
+  const altitude = radToDeg(altitudeRad);
 
   // 方位角の計算
-  const cosAz = (Math.sin(decRad) - Math.sin(lat) * sinAlt) /
-                (Math.cos(lat) * Math.cos(Math.asin(sinAlt)));
-  let azimuth = Math.acos(Math.max(-1, Math.min(1, cosAz))) * 180 / Math.PI;
+  const cosAlt = Math.cos(altitudeRad);
+  let azimuth = 0;
+  if (cosAlt === 0) {
+    azimuth = 0;
+  } else {
+    const cosAz = clamp((sinDec - sinLat * sinAlt) / (cosLat * cosAlt), -1, 1);
+    azimuth = radToDeg(Math.acos(cosAz));
+  }
 
   // 時角が180度より大きい場合、方位角を調整
   if (Math.sin(haRad) > 0) {
@@ -134,9 +168,6 @@ export function celestialToScreen(
   projectionMode: ProjectionMode = 'orthographic',
   observer?: ObserverLocation
 ): { x: number; y: number } | null {
-  if (observer) {
-    // TODO: 観測者位置を考慮した投影を実装する際に使用
-  }
   if (projectionMode === 'stereographic') {
     return celestialToScreenStereographic(ra, dec, viewCenter, zoom, canvasWidth, canvasHeight);
   } else {
@@ -156,45 +187,37 @@ function celestialToScreenOrthographic(
   canvasWidth: number,
   canvasHeight: number
 ): { x: number; y: number } | null {
-  // 視野（Field of View）をzoomから計算
-  // zoom=1で90度、zoom=2で45度（狭い範囲）
-  const fov = 90 / zoom;
+  const { scale } = computeScale(zoom, canvasWidth, canvasHeight);
 
-  // 正射図法では天球を真円に保つ（縦横同じスケール）
-  const scale = Math.min(canvasWidth, canvasHeight) / 2 / Math.tan(fov * Math.PI / 360);
-  const scaleX = scale;
-  const scaleY = scale;
+  const deltaRaRad = degToRad(normalizedDeltaDegrees(ra - viewCenter.ra));
+  const decRad = degToRad(dec);
+  const centerDecRad = degToRad(viewCenter.dec);
 
-  // 各角度をラジアンに変換
-  const raRad = ra * Math.PI / 180;
-  const decRad = dec * Math.PI / 180;
-  const centerRaRad = viewCenter.ra * Math.PI / 180;
-  const centerDecRad = viewCenter.dec * Math.PI / 180;
+  const sinCenterDec = Math.sin(centerDecRad);
+  const cosCenterDec = Math.cos(centerDecRad);
+  const sinDec = Math.sin(decRad);
+  const cosDec = Math.cos(decRad);
 
-  // 正射図法の計算式
-  const cosC = Math.sin(centerDecRad) * Math.sin(decRad) +
-               Math.cos(centerDecRad) * Math.cos(decRad) * Math.cos(raRad - centerRaRad);
+  const cosC = sinCenterDec * sinDec + cosCenterDec * cosDec * Math.cos(deltaRaRad);
 
   // 画面の中心から見て、星が裏側にある場合は表示しない
   if (cosC < 0) {
     return null;
   }
 
-  const x = Math.cos(decRad) * Math.sin(raRad - centerRaRad);
-  const y = Math.cos(centerDecRad) * Math.sin(decRad) -
-            Math.sin(centerDecRad) * Math.cos(decRad) * Math.cos(raRad - centerRaRad);
+  const x = cosDec * Math.sin(deltaRaRad);
+  const y = cosCenterDec * sinDec - sinCenterDec * cosDec * Math.cos(deltaRaRad);
 
   // 宇宙シミュレーター（外から見る）は反転なし
-  const screenX = canvasWidth / 2 + x * scaleX;
-  const screenY = canvasHeight / 2 - y * scaleY;
+  const screenX = canvasWidth / 2 + x * scale;
+  const screenY = canvasHeight / 2 - y * scale;
 
   // 画面外判定（少し広めに）
-  const margin = 100;
   if (
-    screenX < -margin ||
-    screenX > canvasWidth + margin ||
-    screenY < -margin ||
-    screenY > canvasHeight + margin
+    screenX < -OFFSCREEN_MARGIN ||
+    screenX > canvasWidth + OFFSCREEN_MARGIN ||
+    screenY < -OFFSCREEN_MARGIN ||
+    screenY > canvasHeight + OFFSCREEN_MARGIN
   ) {
     return null;
   }
@@ -214,48 +237,40 @@ function celestialToScreenStereographic(
   canvasWidth: number,
   canvasHeight: number
 ): { x: number; y: number } | null {
+  const { scale, fov } = computeScale(zoom, canvasWidth, canvasHeight);
 
-  // 視野（Field of View）をzoomから計算
-  const fov = 90 / zoom;
+  const deltaRaRad = degToRad(normalizedDeltaDegrees(ra - viewCenter.ra));
+  const decRad = degToRad(dec);
+  const centerDecRad = degToRad(viewCenter.dec);
 
-  // プラネタリウムと同じように縦横で同じスケールを使う（真円を保つ）
-  const scale = Math.min(canvasWidth, canvasHeight) / 2 / Math.tan(fov * Math.PI / 360);
-  const scaleX = scale;
-  const scaleY = scale;
+  const sinCenterDec = Math.sin(centerDecRad);
+  const cosCenterDec = Math.cos(centerDecRad);
+  const sinDec = Math.sin(decRad);
+  const cosDec = Math.cos(decRad);
 
-  // 各角度をラジアンに変換
-  const raRad = ra * Math.PI / 180;
-  const decRad = dec * Math.PI / 180;
-  const centerRaRad = viewCenter.ra * Math.PI / 180;
-  const centerDecRad = viewCenter.dec * Math.PI / 180;
-
-  // ステレオ図法の計算式
-  const cosC = Math.sin(centerDecRad) * Math.sin(decRad) +
-               Math.cos(centerDecRad) * Math.cos(decRad) * Math.cos(raRad - centerRaRad);
+  const cosC = sinCenterDec * sinDec + cosCenterDec * cosDec * Math.cos(deltaRaRad);
 
   // 視野内判定（ステレオ図法では裏側も表示可能だが、視野角で制限）
-  const maxAngle = Math.cos((fov / 2 + 30) * Math.PI / 180); // 視野角+余裕
+  const maxAngle = Math.cos(degToRad(fov / 2 + 30)); // 視野角+余裕
   if (cosC < maxAngle) {
     return null;
   }
 
   // ステレオ図法の投影計算
   const k = 2 / (1 + cosC);
-  const x = k * Math.cos(decRad) * Math.sin(raRad - centerRaRad);
-  const y = k * (Math.cos(centerDecRad) * Math.sin(decRad) -
-                 Math.sin(centerDecRad) * Math.cos(decRad) * Math.cos(raRad - centerRaRad));
+  const x = k * cosDec * Math.sin(deltaRaRad);
+  const y = k * (cosCenterDec * sinDec - sinCenterDec * cosDec * Math.cos(deltaRaRad));
 
   // プラネタリウム（内から見る）は反転
-  const screenX = canvasWidth / 2 - x * scaleX;
-  const screenY = canvasHeight / 2 - y * scaleY;
+  const screenX = canvasWidth / 2 - x * scale;
+  const screenY = canvasHeight / 2 - y * scale;
 
   // 画面外判定
-  const margin = 100;
   if (
-    screenX < -margin ||
-    screenX > canvasWidth + margin ||
-    screenY < -margin ||
-    screenY > canvasHeight + margin
+    screenX < -OFFSCREEN_MARGIN ||
+    screenX > canvasWidth + OFFSCREEN_MARGIN ||
+    screenY < -OFFSCREEN_MARGIN ||
+    screenY > canvasHeight + OFFSCREEN_MARGIN
   ) {
     return null;
   }

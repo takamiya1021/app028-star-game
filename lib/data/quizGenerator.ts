@@ -18,6 +18,21 @@ export interface GenerateQuizParams {
 
 const DEFAULT_QUESTION_TYPE: Quiz['questionType'] = 'description';
 
+function pickRandom<T>(items: T[]): T {
+  if (items.length === 0) {
+    throw new Error('Cannot pick from an empty array');
+  }
+  const index = Math.floor(Math.random() * items.length);
+  return items[index];
+}
+
+function getStarDisplayName(star: Star): string | null {
+  const name = star.properName ?? star.name;
+  if (!name) return null;
+  const trimmed = name.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function generateId() {
   if (typeof globalThis.crypto !== 'undefined' && 'randomUUID' in globalThis.crypto) {
     try {
@@ -66,10 +81,7 @@ function filterStars(
   difficulty: GenerateQuizParams['difficulty'],
   category: GenerateQuizParams['category']
 ) {
-  const displayable = stars.filter((star) => {
-    const name = star.properName ?? star.name;
-    return Boolean(name && name.trim());
-  });
+  const displayable = stars.filter((star) => Boolean(getStarDisplayName(star)));
 
   const categoryFn = (star: Star) => {
     if (category === 'all') return true;
@@ -147,14 +159,10 @@ export async function generateQuiz(
     if (candidates.length === 0) {
       throw new Error('No constellations available for quiz');
     }
-    const target = candidates[Math.floor(Math.random() * candidates.length)];
-    const primary = dataset.constellations
-      .filter((c) => c.id !== target.id && constellationMatchesCategory(c, params.category))
-      .map((c) => c.name);
-    const backup = dataset.constellations
+    const target = pickRandom(candidates);
+    const distractors = dataset.constellations
       .filter((c) => c.id !== target.id)
       .map((c) => c.name);
-    const distractors = primary.concat(backup);
     const { question, correctAnswer } = formatConstellationQuestion(target);
     const choices = buildChoices(distractors, correctAnswer, choiceCount);
 
@@ -174,16 +182,16 @@ export async function generateQuiz(
   if (starCandidates.length === 0) {
     throw new Error('No stars available for quiz');
   }
-  const target = starCandidates[Math.floor(Math.random() * starCandidates.length)];
-  const targetName = target.properName ?? target.name;
+  const target = pickRandom(starCandidates);
+  const targetName = getStarDisplayName(target);
   if (!targetName) {
     throw new Error('Target star lacks display name');
   }
 
   const distractorNames = dataset.stars
     .filter((star) => star.id !== target.id)
-    .map((star) => star.properName ?? star.name)
-    .filter((name): name is string => Boolean(name && name.trim()));
+    .map(getStarDisplayName)
+    .filter((name): name is string => Boolean(name));
 
   const { question, correctAnswer } = formatStarQuestion(target);
   const choices = buildChoices(distractorNames, correctAnswer, choiceCount);
