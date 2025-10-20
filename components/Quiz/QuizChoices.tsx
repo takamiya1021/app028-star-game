@@ -21,7 +21,7 @@ function QuizChoicesComponent({
   onSelect,
 }: QuizChoicesProps) {
   return (
-    <StaggerContainer className="grid gap-3">
+    <StaggerContainer className="grid gap-2 sm:gap-3">
       {choices.map((choice) => {
         const isSelected = selected === choice;
         return (
@@ -33,7 +33,7 @@ function QuizChoicesComponent({
             whileTap={!disabled ? { scale: 0.98 } : undefined}
             disabled={disabled}
             onClick={() => onSelect(choice)}
-            className={`rounded-md border px-4 py-2 text-left transition ${
+            className={`rounded-md border px-3 py-1.5 text-left text-sm transition sm:px-4 sm:py-2 ${
               isSelected
                 ? 'border-blue-400 bg-blue-500/20 text-white'
                 : 'border-white/20 bg-white/5 text-white hover:border-blue-300 hover:bg-blue-400/10'

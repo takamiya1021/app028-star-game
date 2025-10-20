@@ -104,33 +104,42 @@ export function QuizContainer() {
 
   return (
     <FadeIn
-      className="space-y-6 rounded-xl border border-white/10 bg-black/40 p-6 shadow-lg"
+      className="pointer-events-auto space-y-3 rounded-xl border border-white/10 bg-black/40 p-3 shadow-lg sm:space-y-6 sm:p-6"
       data-testid="quiz-container"
     >
-      <header className="flex items-baseline justify-between text-white">
-        <h2 className="text-xl font-bold">星空クイズ</h2>
-        <div className="text-sm text-blue-200">
-          スコア: {correctCount}/{totalCount}
+      {/* デスクトップのみスコア表示 */}
+      <header className="hidden sm:flex items-center gap-2 text-white">
+        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+            style={{ width: `${totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0}%` }}
+          />
         </div>
+        <span className="text-sm font-semibold text-blue-200 whitespace-nowrap">
+          {correctCount}/{totalCount}
+        </span>
       </header>
 
+      {/* デスクトップのみローディング表示 */}
       {status === 'loading' && (
-        <p className="text-sm text-blue-100">クイズを読み込み中...</p>
+        <p className="hidden sm:block text-sm text-blue-100">クイズを読み込み中...</p>
       )}
 
+      {/* デスクトップのみエラー表示 */}
       {status === 'error' && (
-        <div className="rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-100">
+        <div className="hidden sm:block rounded-md border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-100">
           {errorMessage ?? 'エラーが発生しました。再試行してください。'}
         </div>
       )}
 
       {currentQuiz && status !== 'loading' && (
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
+          {/* 質問文表示（全画面） */}
           <QuizQuestion quiz={currentQuiz} />
 
-          {/* クイズタイプ別の説明 */}
+          {/* ヒント表示（全画面） */}
           {currentQuiz.type === 'find-star' && (
-            <p className="text-sm text-blue-200">
+            <p className="text-xs text-blue-200 sm:text-sm">
               💡 星空をクリック/タップして、対象の星を探してください
             </p>
           )}

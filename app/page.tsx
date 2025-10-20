@@ -12,7 +12,6 @@ import {
 import type { Star } from '@/types/star';
 import { loadStars } from '@/lib/data/starsLoader';
 import QuizContainer from '@/components/Quiz/QuizContainer';
-import ScoreDisplay from '@/components/Score/ScoreDisplay';
 import { useQuiz } from '@/context/QuizContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useBreakpoint } from '@/lib/ui/useBreakpoint';
@@ -31,7 +30,7 @@ export default function Home() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [isCanvasSupported, setCanvasSupported] = useState(true);
 
-  const { correctCount, totalCount, history, currentQuiz, submitAnswer } = useQuiz();
+  const { currentQuiz, submitAnswer, correctCount, totalCount } = useQuiz();
   const { settings } = useSettings();
   const breakpoint = useBreakpoint();
 
@@ -120,23 +119,6 @@ export default function Home() {
     }
   }, [breakpoint]);
 
-  const score = useMemo(() => {
-    const percentage = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-    return { correct: correctCount, total: totalCount, percentage };
-  }, [correctCount, totalCount]);
-
-  const streak = useMemo(() => {
-    let count = 0;
-    for (let i = history.length - 1; i >= 0; i -= 1) {
-      if (history[i].isCorrect) {
-        count += 1;
-      } else {
-        break;
-      }
-    }
-    return count;
-  }, [history]);
-
   // クイズ開始時に自動的にプラネタリウムビューに切り替え
   useEffect(() => {
     if (currentQuiz && projectionMode !== 'stereographic') {
@@ -198,8 +180,7 @@ export default function Home() {
         </div>
       )}
 
-      <aside className="pointer-events-auto absolute right-6 top-28 hidden w-full max-w-sm flex-col gap-4 rounded-3xl bg-black/50 p-5 text-white shadow-2xl backdrop-blur-lg xl:flex">
-        <ScoreDisplay score={score} streak={streak} label="現在のスコア" />
+      <aside className="pointer-events-none absolute right-6 top-28 hidden w-full max-w-sm flex-col gap-4 xl:flex">
         <QuizContainer />
       </aside>
 
@@ -211,28 +192,37 @@ export default function Home() {
 
       {isMobileQuizOpen && (
         <div
-          className="pointer-events-auto fixed inset-0 z-40 flex items-end justify-center bg-black/70 px-4 pb-6 sm:hidden"
+          className="pointer-events-none fixed inset-0 z-40 flex items-end justify-center px-4 pb-6 sm:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="クイズパネル"
         >
-          <FadeIn as="div" id="mobile-quiz-panel" className="w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900/95 shadow-2xl backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-white">
-              <h2 className="text-lg font-semibold">星空クイズ</h2>
-              <button
-                type="button"
-                onClick={closeMobileQuiz}
-                className="h-10 w-10 rounded-full bg-white/10 text-xl leading-none text-white transition hover:bg-white/20"
-                aria-label="クイズパネルを閉じる"
-              >
-                ×
-              </button>
+          <FadeIn as="div" id="mobile-quiz-panel" className="pointer-events-auto w-full max-w-lg overflow-hidden rounded-3xl bg-slate-900/95 shadow-2xl backdrop-blur">
+            <div className="border-b border-white/10 px-4 py-3 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+                      style={{ width: `${totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-blue-200 whitespace-nowrap">
+                    {correctCount}/{totalCount}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMobileQuiz}
+                  className="h-8 w-8 rounded-full bg-white/10 text-lg leading-none text-white transition hover:bg-white/20"
+                  aria-label="クイズパネルを閉じる"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className="max-h-[70vh] overflow-y-auto px-4 py-4">
-              <ScoreDisplay score={score} streak={streak} label="現在のスコア" className="bg-white/10" />
-              <div className="mt-4">
-                <QuizContainer />
-              </div>
+              <QuizContainer />
             </div>
           </FadeIn>
         </div>
@@ -280,7 +270,7 @@ export default function Home() {
             >
               クイズを開く
               <span className="ml-3 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold">
-                {score.correct}/{score.total || 0}
+                {correctCount}/{totalCount || 0}
               </span>
             </button>
           </div>
