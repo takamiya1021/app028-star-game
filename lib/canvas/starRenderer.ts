@@ -372,7 +372,7 @@ export function drawStars(
   // 表示範囲の情報を画面に表示
   if (!skipOverlay) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(5, 5, 350, 150);
+    ctx.fillRect(5, 5, 350, 170);
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px monospace';
@@ -380,12 +380,13 @@ export function drawStars(
 
     ctx.font = '14px monospace';
     ctx.fillText(`星の数: ${visibleCount} / ${stars.length}`, 15, 50);
-    ctx.fillText(`視野中心: 赤経 ${viewCenter.ra}° / 赤緯 ${viewCenter.dec}°`, 15, 70);
+    ctx.fillText(`視野中心:`, 15, 70);
+    ctx.fillText(`  赤経 ${viewCenter.ra.toFixed(1)}°`, 15, 90);
+    ctx.fillText(`  赤緯 ${viewCenter.dec.toFixed(1)}°`, 15, 110);
 
     const fov = 90 / zoom; // 視野角
-    ctx.fillText(`表示範囲:`, 15, 95);
-    ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 115);
-    ctx.fillText(`  ズーム: ${zoom.toFixed(1)}x`, 15, 135);
+    ctx.fillText(`表示範囲:`, 15, 135);
+    ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 155);
   }
 
   if (observerCallback) {

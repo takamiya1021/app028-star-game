@@ -8,6 +8,7 @@ export interface Star {
   spectralType: string | null;   // スペクトル型
   name: string | null;           // カタログ名（例: "9Alp CMa"）
   properName?: string;           // 固有名（カタカナ、例: "シリウス"）
+  constellation?: string;        // 星座名（例: "Orion"）
   hd: number | null;             // Henry Draper番号
   hr: number | null;             // Harvard Revised番号
   parallax: number | null;       // 視差（mas）

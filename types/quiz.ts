@@ -1,14 +1,36 @@
+import type { Star } from './star';
+
+// クイズタイプ
+export type QuizType =
+  | 'find-star'        // この星を探せ！
+  | 'brightness'       // 明るさ比べ
+  | 'constellation'    // 星座の形当て
+  | 'color'           // 色あて
+  | 'distance';       // 距離
+
 // クイズの型定義
 export interface Quiz {
   id: string;                    // クイズID
-  type: 'constellation' | 'star'; // クイズタイプ
-  questionType: 'visual' | 'description'; // 問題形式
+  type: QuizType;                // クイズタイプ
+  questionType: 'visual' | 'description' | 'interactive'; // 問題形式
   question: string;              // 問題文
   correctAnswer: string;         // 正解
   choices: string[];             // 選択肢
-  constellationId?: string;      // 星座ID（星座クイズの場合）
-  starId?: number;               // 星ID（星クイズの場合）
   difficulty: 'easy' | 'medium' | 'hard'; // 難易度
+
+  // 星空連動情報
+  targetStar?: Star;             // 対象の星（単一星クイズ）
+  targetConstellation?: string;  // 対象の星座ID（星座クイズ）
+  viewCenter?: { ra: number; dec: number }; // 自動移動先の座標
+  zoomLevel?: number;            // 自動ズームレベル
+
+  // クイズタイプ別の追加情報
+  compareStar?: Star;            // 比較対象の星（明るさ比べクイズ）
+  explanation?: string;          // 正解後の解説文
+
+  // 後方互換性のため残す
+  constellationId?: string;      // 星座ID（旧形式）
+  starId?: number;               // 星ID（旧形式）
 }
 
 // 設定の型定義

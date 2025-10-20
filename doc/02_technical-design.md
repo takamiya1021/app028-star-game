@@ -1,7 +1,7 @@
 # 技術設計書：Stellarium Quiz
 
 ## 📋 概要
-要件定義書（01_requirements.md v2.0）に基づき、プラネタリウム体験型の星座・星学習クイズアプリを開発する技術設計書。
+要件定義書（01_requirements.md v2.1）に基づき、プラネタリウム体験型の星座・星学習クイズアプリを開発する技術設計書。
 
 ---
 
@@ -314,45 +314,276 @@ function drawStar(
 
 ## 🎲 クイズ生成ロジック
 
-### 出題アルゴリズム
+### クイズタイプ定義
 ```typescript
-function generateQuiz(
-  difficulty: 'easy' | 'medium' | 'hard',
-  category: 'north' | 'south' | 'all',
-  quizType?: 'constellation' | 'star' // 未指定ならランダム
-): Quiz {
-  // 1. クイズタイプ決定（constellation or star）
-  const type = quizType || (Math.random() > 0.7 ? 'star' : 'constellation');
+type QuizType =
+  | 'find-star'        // この星を探せ！
+  | 'brightness'       // 明るさ比べ
+  | 'constellation'    // 星座の形当て
+  | 'color'           // 色あて
+  | 'distance';       // 距離
 
-  // 2. 難易度とカテゴリーに基づいて候補を絞り込み
-  const candidates = filterCandidates(type, difficulty, category);
+interface Quiz {
+  id: string;
+  type: QuizType;
+  questionType: 'visual' | 'description' | 'interactive';
+  question: string;
+  correctAnswer: string;
+  choices: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
 
-  // 3. ランダムに1つ選択
-  const target = candidates[Math.floor(Math.random() * candidates.length)];
+  // 星空連動情報
+  targetStar?: Star;           // 対象の星（単一星クイズ）
+  targetConstellation?: string; // 対象の星座ID（星座クイズ）
+  viewCenter?: { ra: number; dec: number }; // 自動移動先の座標
+  zoomLevel?: number;          // 自動ズームレベル
 
-  // 4. 選択肢生成
-  const choices = generateChoices(type, target, difficulty);
-
-  // 5. Quizオブジェクト生成
-  return { ... };
+  // クイズタイプ別の追加情報
+  compareStar?: Star;          // 比較対象の星（明るさ比べクイズ）
+  explanation?: string;        // 正解後の解説文
 }
 ```
 
-### 選択肢生成
+### 出題アルゴリズム（改訂版）
 ```typescript
-function generateChoices(
-  type: 'constellation' | 'star',
-  correctAnswer: Constellation | Star,
-  difficulty: 'easy' | 'medium' | 'hard'
-): string[] {
-  const numChoices = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+const QUIZ_WEIGHTS = {
+  'find-star': 30,      // この星を探せ
+  'constellation': 25,  // 星座の形当て
+  'brightness': 20,     // 明るさ比べ
+  'color': 15,          // 色あて
+  'distance': 10,       // 距離
+};
 
-  // 正解と似た特徴を持つダミー選択肢を生成
-  // （例: 同じ季節の星座、同じ明るさの星）
-  const dummies = selectSimilarItems(correctAnswer, numChoices - 1);
+function generateQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all',
+  previousType?: QuizType // 連続防止用
+): Quiz {
+  // 1. クイズタイプを重み付きランダムで決定（連続防止）
+  const type = selectQuizType(QUIZ_WEIGHTS, previousType);
 
-  // シャッフルして返す
-  return shuffle([correctAnswer.name, ...dummies.map(d => d.name)]);
+  // 2. タイプ別のクイズ生成
+  switch (type) {
+    case 'find-star':
+      return generateFindStarQuiz(difficulty, category);
+    case 'brightness':
+      return generateBrightnessQuiz(difficulty, category);
+    case 'constellation':
+      return generateConstellationQuiz(difficulty, category);
+    case 'color':
+      return generateColorQuiz(difficulty, category);
+    case 'distance':
+      return generateDistanceQuiz(difficulty, category);
+  }
+}
+```
+
+### 各クイズタイプの生成ロジック
+
+#### 1. 「この星を探せ！」クイズ
+```typescript
+function generateFindStarQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all'
+): Quiz {
+  // 難易度別の等級フィルタ
+  const magFilter = difficulty === 'easy' ? (s: Star) => s.vmag <= 1.5
+    : difficulty === 'medium' ? (s: Star) => s.vmag <= 2.5
+    : (s: Star) => s.vmag <= 4.0;
+
+  const candidates = filterStars(stars, category, magFilter);
+  const target = pickRandom(candidates);
+
+  return {
+    id: generateId(),
+    type: 'find-star',
+    questionType: 'interactive',
+    question: `「${target.constellation}座」の一等星「${target.properName}」を探してタップしてください`,
+    correctAnswer: target.properName,
+    choices: [], // インタラクティブなので選択肢なし
+    difficulty,
+    targetStar: target,
+    viewCenter: { ra: target.ra, dec: target.dec },
+    zoomLevel: 3.0, // 星がよく見えるズームレベル
+  };
+}
+```
+
+#### 2. 明るさ比べクイズ
+```typescript
+function generateBrightnessQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all'
+): Quiz {
+  // 難易度別の等級差
+  const magDiff = difficulty === 'easy' ? 1.5 : difficulty === 'medium' ? 0.8 : 0.3;
+
+  const brightStars = filterStars(stars, category, (s) => s.vmag <= 3);
+  const star1 = pickRandom(brightStars);
+  const star2 = pickRandom(brightStars.filter(s =>
+    Math.abs(s.vmag - star1.vmag) >= magDiff && s.id !== star1.id
+  ));
+
+  const brighter = star1.vmag < star2.vmag ? star1 : star2;
+
+  // 2つの星が両方見える位置を計算
+  const viewCenter = calculateMidpoint(star1, star2);
+  const zoomLevel = calculateZoomForTwoStars(star1, star2);
+
+  return {
+    id: generateId(),
+    type: 'brightness',
+    questionType: 'description',
+    question: `「${star1.properName}」と「${star2.properName}」、どちらが明るい？`,
+    correctAnswer: brighter.properName,
+    choices: [star1.properName, star2.properName],
+    difficulty,
+    targetStar: star1,
+    compareStar: star2,
+    viewCenter,
+    zoomLevel,
+    explanation: `${brighter.properName}は${brighter.vmag.toFixed(2)}等級、${star1.vmag < star2.vmag ? star2.properName : star1.properName}は${(star1.vmag < star2.vmag ? star2.vmag : star1.vmag).toFixed(2)}等級です。`,
+  };
+}
+```
+
+#### 3. 星座の形当てクイズ
+```typescript
+function generateConstellationQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all'
+): Quiz {
+  const candidates = filterConstellations(constellations, difficulty, category);
+  const target = pickRandom(candidates);
+
+  // 星座全体が見えるビュー設定を計算
+  const viewCenter = calculateConstellationCenter(target);
+  const zoomLevel = calculateZoomForConstellation(target);
+
+  const distractors = constellations
+    .filter(c => c.id !== target.id)
+    .map(c => c.name);
+  const choiceCount = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8;
+  const choices = buildChoices(distractors, target.name, choiceCount);
+
+  return {
+    id: generateId(),
+    type: 'constellation',
+    questionType: 'visual',
+    question: `この星座は何座？`,
+    correctAnswer: target.name,
+    choices,
+    difficulty,
+    targetConstellation: target.id,
+    viewCenter,
+    zoomLevel,
+  };
+}
+```
+
+#### 4. 色あてクイズ
+```typescript
+function generateColorQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all'
+): Quiz {
+  const colorableStars = filterStars(stars, category, (s) =>
+    s.spectralType && s.vmag <= 3
+  );
+  const target = pickRandom(colorableStars);
+  const color = getColorFromSpectralType(target.spectralType);
+
+  return {
+    id: generateId(),
+    type: 'color',
+    questionType: 'description',
+    question: `「${target.properName}」は何色の星？`,
+    correctAnswer: color,
+    choices: ['青白い', '白い', '黄色い', 'オレンジ', '赤い'],
+    difficulty,
+    targetStar: target,
+    viewCenter: { ra: target.ra, dec: target.dec },
+    zoomLevel: 4.0,
+    explanation: `${target.properName}はスペクトル型${target.spectralType}の星で、${color}色に輝いています。`,
+  };
+}
+```
+
+#### 5. 距離クイズ
+```typescript
+function generateDistanceQuiz(
+  difficulty: 'easy' | 'medium' | 'hard',
+  category: 'north' | 'south' | 'all'
+): Quiz {
+  const starsWithDistance = filterStars(stars, category, (s) =>
+    s.distance && s.vmag <= 3
+  );
+  const target = pickRandom(starsWithDistance);
+
+  // 難易度別の選択肢範囲
+  const ranges = difficulty === 'easy'
+    ? [5, 25, 100, 500]
+    : difficulty === 'medium'
+    ? [10, 50, 100, 250]
+    : [target.distance * 0.5, target.distance * 0.8, target.distance * 1.2, target.distance * 1.5];
+
+  const correctRange = ranges.find(r => Math.abs(r - target.distance) < 10);
+  const choices = ranges.map(r => `約${Math.round(r)}光年`);
+
+  return {
+    id: generateId(),
+    type: 'distance',
+    questionType: 'description',
+    question: `「${target.properName}」は地球から何光年離れている？`,
+    correctAnswer: `約${Math.round(correctRange)}光年`,
+    choices,
+    difficulty,
+    targetStar: target,
+    viewCenter: { ra: target.ra, dec: target.dec },
+    zoomLevel: 3.5,
+    explanation: `${target.properName}は地球から約${target.distance.toFixed(1)}光年離れています。`,
+  };
+}
+```
+
+### 星空自動移動ロジック
+```typescript
+function navigateToQuizTarget(quiz: Quiz) {
+  const { viewCenter, zoomLevel } = quiz;
+
+  // スムーズアニメーションで移動（1.5秒）
+  animateViewTransition({
+    from: currentView,
+    to: { center: viewCenter, zoom: zoomLevel },
+    duration: 1500,
+    easing: 'ease-in-out',
+  });
+}
+
+// 2つの星の中間点を計算
+function calculateMidpoint(star1: Star, star2: Star) {
+  return {
+    ra: (star1.ra + star2.ra) / 2,
+    dec: (star1.dec + star2.dec) / 2,
+  };
+}
+
+// 2つの星が両方見えるズームレベルを計算
+function calculateZoomForTwoStars(star1: Star, star2: Star) {
+  const distance = Math.sqrt(
+    Math.pow(star1.ra - star2.ra, 2) +
+    Math.pow(star1.dec - star2.dec, 2)
+  );
+  return Math.max(1.0, 90 / (distance * 1.5));
+}
+
+// 星座全体が見えるズームレベルを計算
+function calculateZoomForConstellation(constellation: Constellation) {
+  // 星座を構成する星の範囲からズームレベルを決定
+  const stars = getConstellationStars(constellation);
+  const bounds = calculateBounds(stars);
+  const maxDimension = Math.max(bounds.width, bounds.height);
+  return Math.max(0.8, 90 / (maxDimension * 1.3));
 }
 ```
 
@@ -455,6 +686,92 @@ function animateTwinkle(star: Star, time: number): number {
 
 ---
 
+## 📱 PWA（Progressive Web App）実装
+
+### 目的
+- ホーム画面への追加でアプリライクな体験を提供
+- Service Workerによるキャッシュ戦略で高速化
+- オフライン時の基本動作（完全オフライン対応は将来対応）
+
+### 1. manifest.json設定
+```json
+{
+  "name": "Stellarium Quiz",
+  "short_name": "星座クイズ",
+  "description": "プラネタリウム体験型 星座・星学習クイズアプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e27",
+  "theme_color": "#1a1f3a",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+```
+
+### 2. Service Worker設計
+
+#### 基本構成
+- **ファイル配置**: `public/sw.js`
+- **登録箇所**: `app/layout.tsx`
+
+#### キャッシュ戦略
+```typescript
+// キャッシュ対象
+const CACHE_NAME = 'stellarium-quiz-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/globals.css',
+  '/data/stars.json',
+  '/data/constellations.json',
+  '/data/constellation-lines.json'
+];
+
+// キャッシュ戦略
+// - 静的アセット: Cache First
+// - APIリクエスト: Network First（将来対応）
+// - 画像: Cache First with fallback
+```
+
+#### 実装方針
+- **初期バージョン**: 基本的なキャッシュ機能のみ
+- **更新戦略**: バージョン番号でキャッシュ管理
+- **オフライン対応**: 最小限（完全オフラインは Phase 2 以降）
+
+### 3. インストールプロンプト
+
+#### ユーザー体験
+- 初回訪問時にインストールバナーを表示（ブラウザのデフォルト動作）
+- ユーザーが拒否した場合は、設定画面に「ホーム画面に追加」ボタンを配置
+
+#### 実装
+```typescript
+// app/layout.tsx での Service Worker 登録
+useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => console.log('SW registered'))
+      .catch(error => console.error('SW registration failed:', error));
+  }
+}, []);
+```
+
+### 4. アイコン準備
+- **192x192px**: Android向けアイコン
+- **512x512px**: Android向け高解像度アイコン
+- **デザイン**: 星空・星座をモチーフにしたアイコン
+
+---
+
 ## 📝 今後の拡張性
 
 ### Phase 2 候補機能
@@ -465,17 +782,19 @@ function animateTwinkle(star: Star, time: number): number {
 
 ### 技術的拡張ポイント
 - **WebGL化**: より高速な3D星空描画
-- **PWA対応**: オフラインでも動作するアプリ化
 - **バックエンド追加**: ユーザーデータの永続化
 
 ---
 
 ## ✅ 設計承認
 
-この技術設計書は要件定義書（01_requirements.md v2.0）のすべての要件を満たす設計となっています。
+この技術設計書は要件定義書（01_requirements.md v2.2）のすべての要件を満たす設計となっています。
 
 - **作成日**: 2025-10-18
-- **バージョン**: 2.0
-- **準拠要件定義**: 01_requirements.md v2.0
-- **更新日**: 2025-10-18
-- モバイル端末向け UI 再設計（大型ボタン、フローティングメニュー、操作ガイド）
+- **バージョン**: 2.2
+- **準拠要件定義**: 01_requirements.md v2.2
+- **更新日**: 2025-10-20
+- **変更履歴**:
+  - v2.0 (2025-10-18): モバイル端末向け UI 再設計（大型ボタン、フローティングメニュー、操作ガイド）
+  - v2.1 (2025-10-20): PWA対応（manifest.json + Service Worker）を追加
+  - v2.2 (2025-10-20): クイズ生成ロジック全面改訂（5種類のクイズタイプ、星空自動移動機能を追加）

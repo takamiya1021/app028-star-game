@@ -1,7 +1,7 @@
 # 実装計画書：Stellarium Quiz（TDD準拠版）
 
 ## 📋 概要
-技術設計書（02_technical-design.md v2.0）に基づき、**TDD（Test-Driven Development）**のRed-Green-Refactorサイクルで段階的に実装を進める計画書。
+技術設計書（02_technical-design.md v2.2）に基づき、**TDD（Test-Driven Development）**のRed-Green-Refactorサイクルで段階的に実装を進める計画書。
 
 ## 🔁 TDDサイクルの原則
 各機能実装は必ず以下の順序で進める：
@@ -543,6 +543,270 @@
 
 ---
 
+### Phase 12: PWA対応（予定工数: 3時間）
+
+#### 12-1: manifest.json作成（TDDサイクル）
+**【　】manifest.jsonバリデーションテスト作成（Red）**
+- `__tests__/pwa/manifest.test.ts` 作成
+  - manifest.jsonが正しく読み込めるかテスト
+  - 必須フィールド（name, short_name, icons等）の存在確認
+  - アイコンパスの有効性テスト
+
+**【　】manifest.json作成（Green）**
+- `public/manifest.json` 作成
+  - アプリ名: "Stellarium Quiz"
+  - 短縮名: "星座クイズ"
+  - background_color: "#0a0e27"（深い青）
+  - theme_color: "#1a1f3a"（プラネタリウム風）
+  - display: "standalone"
+  - icons配列（192x192, 512x512）
+
+**【　】manifest.jsonリファクタリング（Refactor）**
+- メタデータの最適化
+- テストパス確認
+
+#### 12-2: アイコン準備
+**【　】アイコン画像作成**
+- `public/icons/icon-192x192.png` 作成
+  - デザイン: 星空・星座モチーフ
+  - サイズ: 192x192px
+- `public/icons/icon-512x512.png` 作成
+  - デザイン: 同上（高解像度版）
+  - サイズ: 512x512px
+
+**【　】アイコンファイル検証**
+- ファイルサイズ確認
+- 画質確認
+
+#### 12-3: Service Worker実装（TDDサイクル）
+**【　】Service Workerテスト作成（Red）**
+- `__tests__/pwa/service-worker.test.ts` 作成
+  - Service Worker登録テスト
+  - キャッシュ戦略テスト（Cache First）
+  - fetch eventハンドリングテスト
+
+**【　】Service Worker実装（Green）**
+- `public/sw.js` 作成
+  - install eventでキャッシュ作成
+  - activate eventで古いキャッシュ削除
+  - fetch eventでCache Firstキャッシュ戦略実装
+  - キャッシュ対象:
+    - `/`（トップページ）
+    - `/globals.css`
+    - `/data/stars.json`
+    - `/data/constellations.json`
+    - `/data/constellation-lines.json`
+
+**【　】Service Workerリファクタリング（Refactor）**
+- キャッシュ名のバージョン管理
+- エラーハンドリング強化
+- テストパス確認
+
+#### 12-4: Service Worker登録（TDDサイクル）
+**【　】Service Worker登録テスト作成（Red）**
+- `__tests__/app/layout.test.tsx` にSW登録テスト追加
+  - navigator.serviceWorkerの存在確認
+  - 登録成功ケーステスト
+  - 登録失敗ケーステスト
+
+**【　】app/layout.tsx修正（Green）**
+- useEffectでService Worker登録
+- 成功時のログ出力
+- 失敗時のエラーハンドリング
+
+**【　】登録処理リファクタリング（Refactor）**
+- エラーハンドリング改善
+- テストパス確認
+
+#### 12-5: PWA動作確認
+**【　】ローカルテスト**
+- Lighthouse PWA監査実行
+- Chrome DevToolsでmanifest.json確認
+- Service Workerの動作確認
+- キャッシュ動作確認
+
+**【　】インストールテスト**
+- ブラウザの「インストール」プロンプト表示確認
+- ホーム画面への追加動作確認
+- standalone表示確認
+
+**【　】オフライン動作テスト**
+- キャッシュされたページのオフライン表示確認
+- ネットワークなし時の挙動確認
+
+---
+
+### Phase 13: 新クイズ機能実装（予定工数: 15時間）
+
+#### 13-1: Quiz型定義の拡張（TDDサイクル）
+**【　】Quiz型拡張テスト作成（Red）**
+- `__tests__/types/quiz.test.ts` 作成
+  - 新しいQuizType（find-star, brightness, constellation, color, distance）のバリデーションテスト
+  - viewCenter, zoomLevel, targetStar等の新フィールドテスト
+
+**【　】Quiz型定義拡張（Green）**
+- `types/quiz.ts` 修正
+  - QuizType型を拡張（5種類のクイズタイプ）
+  - Quiz interfaceに星空連動情報フィールド追加（viewCenter, zoomLevel, targetStar, targetConstellation, compareStar, explanation）
+  - questionType に 'interactive' を追加
+
+**【　】Quiz型リファクタリング（Refactor）**
+- 型安全性の向上
+- テストパス確認
+
+#### 13-2: クイズ生成ロジック実装（TDDサイクル）
+
+**Phase 1クイズ（体験型）**
+
+**【　】「この星を探せ！」クイズテスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/findStarQuiz.test.ts` 作成
+  - 難易度別の星フィルタリングテスト
+  - viewCenter, zoomLevelの正しい設定テスト
+
+**【　】「この星を探せ！」クイズ実装（Green）**
+- `lib/data/quizGenerator/findStarQuiz.ts` 作成
+  - generateFindStarQuiz関数実装
+  - 難易度別等級フィルタ（Easy: 1.5等以下、Medium: 2.5等以下、Hard: 4.0等以下）
+
+**【　】「この星を探せ！」クイズリファクタリング（Refactor）**
+
+**【　】明るさ比べクイズテスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/brightnessQuiz.test.ts` 作成
+  - 2つの星の選択テスト
+  - 等級差による難易度調整テスト
+  - calculateMidpoint, calculateZoomForTwoStarsのテスト
+
+**【　】明るさ比べクイズ実装（Green）**
+- `lib/data/quizGenerator/brightnessQuiz.ts` 作成
+  - generateBrightnessQuiz関数実装
+  - calculateMidpoint, calculateZoomForTwoStars実装
+
+**【　】明るさ比べクイズリファクタリング（Refactor）**
+
+**Phase 2クイズ（ビジュアル＆知識系）**
+
+**【　】星座の形当てクイズテスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/constellationQuiz.test.ts` 作成（既存修正）
+  - 星座中心・ズーム計算テスト
+  - calculateConstellationCenter, calculateZoomForConstellationのテスト
+
+**【　】星座の形当てクイズ実装（Green）**
+- `lib/data/quizGenerator/constellationQuiz.ts` 作成（既存修正）
+  - generateConstellationQuiz関数を拡張
+  - calculateConstellationCenter, calculateZoomForConstellation実装
+
+**【　】星座の形当てクイズリファクタリング（Refactor）**
+
+**【　】色あてクイズテスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/colorQuiz.test.ts` 作成
+  - スペクトル型からの色判定テスト
+  - getColorFromSpectralType関数のテスト
+
+**【　】色あてクイズ実装（Green）**
+- `lib/data/quizGenerator/colorQuiz.ts` 作成
+  - generateColorQuiz関数実装
+  - getColorFromSpectralType実装（O,B→青白い、A,F→白い、G→黄色い、K→オレンジ、M→赤い）
+
+**【　】色あてクイズリファクタリング（Refactor）**
+
+**【　】距離クイズテスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/distanceQuiz.test.ts` 作成
+  - 距離データのある星のフィルタリングテスト
+  - 難易度別選択肢範囲テスト
+
+**【　】距離クイズ実装（Green）**
+- `lib/data/quizGenerator/distanceQuiz.ts` 作成
+  - generateDistanceQuiz関数実装
+
+**【　】距離クイズリファクタリング（Refactor）**
+
+#### 13-3: 重み付きランダム選択実装（TDDサイクル）
+**【　】クイズタイプ選択テスト作成（Red）**
+- `__tests__/lib/data/quizGenerator/selectQuizType.test.ts` 作成
+  - 重み付きランダム選択のテスト
+  - 連続防止ロジックのテスト
+
+**【　】クイズタイプ選択実装（Green）**
+- `lib/data/quizGenerator/selectQuizType.ts` 作成
+  - QUIZ_WEIGHTS定義（find-star: 30, constellation: 25, brightness: 20, color: 15, distance: 10）
+  - selectQuizType関数実装
+
+**【　】クイズタイプ選択リファクタリング（Refactor）**
+
+#### 13-4: メインgenerateQuiz関数の統合（TDDサイクル）
+**【　】統合テスト作成（Red）**
+- `__tests__/lib/data/quizGenerator.test.ts` 修正
+  - 5種類すべてのクイズタイプが生成できることをテスト
+  - 各クイズタイプが適切なフィールドを持つことをテスト
+
+**【　】generateQuiz関数統合（Green）**
+- `lib/data/quizGenerator.ts` 大幅修正
+  - 5種類のクイズ生成関数をswitch文で振り分け
+  - previousType引数追加（連続防止用）
+
+**【　】generateQuiz統合リファクタリング（Refactor）**
+
+#### 13-5: 星空自動移動機能実装（TDDサイクル）
+**【　】StarField自動移動テスト作成（Red）**
+- `__tests__/components/StarField/navigation.test.tsx` 作成
+  - viewCenter, zoomの自動変更テスト
+  - アニメーション動作テスト
+
+**【　】StarField自動移動実装（Green）**
+- `components/StarField/StarField.tsx` 修正
+  - quizTarget propを追加
+  - quizTargetが変更された時に自動的にviewCenterとzoomを変更
+  - スムーズなアニメーション（react-spring使用）
+
+**【　】StarField自動移動リファクタリング（Refactor）**
+
+#### 13-6: 「この星を探せ！」UI実装（TDDサイクル）
+**【　】星タップ検出テスト作成（Red）**
+- `__tests__/components/StarField/starClick.test.tsx` 作成
+  - クリック座標から最も近い星を特定するテスト
+  - 正解・不正解判定テスト
+
+**【　】星タップ検出実装（Green）**
+- `components/StarField/StarField.tsx` 修正
+  - onStarClickイベントハンドラ追加
+  - クリック座標から最も近い星を特定する関数実装
+
+**【　】星タップ検出リファクタリング（Refactor）**
+
+#### 13-7: QuizContainerとの統合（TDDサイクル）
+**【　】QuizContainer統合テスト作成（Red）**
+- `__tests__/components/Quiz/QuizContainer.test.tsx` 修正
+  - 新しいクイズタイプの表示テスト
+  - 星空自動移動のトリガーテスト
+
+**【　】QuizContainer統合実装（Green）**
+- `components/Quiz/QuizContainer.tsx` 修正
+  - quizTargetをStarFieldに渡す
+  - クイズタイプ別のUI表示分岐
+
+**【　】QuizContainer統合リファクタリング（Refactor）**
+
+#### 13-8: 解説表示機能実装（TDDサイクル）
+**【　】解説表示テスト作成（Red）**
+- `__tests__/components/Quiz/QuizExplanation.test.tsx` 作成
+  - explanation フィールドがある場合の表示テスト
+
+**【　】解説表示実装（Green）**
+- `components/Quiz/QuizExplanation.tsx` 作成
+  - 正解後にexplanationを表示するコンポーネント
+
+**【　】解説表示リファクタリング（Refactor）**
+
+#### 13-9: E2Eテスト（全クイズタイプ）
+**【　】E2Eテスト作成**
+- `__tests__/e2e/quiz-types.spec.ts` 作成
+  - 5種類すべてのクイズタイプが正しく動作することをテスト
+  - 星空自動移動が正しく動作することをテスト
+
+**【　】E2Eテスト実行・修正**
+
+---
+
 ## 📊 総工数見積もり（TDD準拠版）
 | フェーズ | 旧工数 | 新工数 | 変更理由 |
 |---------|-------|-------|---------|
@@ -558,11 +822,15 @@
 | Phase 9: パフォーマンス最適化 | 3時間 | **4時間** | パフォーマンステスト+1時間 |
 | Phase 10: E2Eテスト実装 | 4時間 | **3時間** | E2E専門化で-1時間 |
 | Phase 11: 最終調整・デプロイ準備 | 2時間 | **3時間** | エラーハンドリングテスト+1時間 |
-| **合計** | **45時間** | **62時間** | **TDD対応で+17時間** |
+| **Phase 12: PWA対応** | - | **3時間** | **新規追加（manifest.json + Service Worker + テスト）** |
+| **Phase 13: 新クイズ機能実装** | - | **15時間** | **新規追加（5種類のクイズタイプ + 星空連動 + テスト）** |
+| **合計** | **45時間** | **80時間** | **TDD対応で+17時間、PWA対応で+3時間、新クイズ機能で+15時間** |
 
 ### 工数増加の内訳
 - **Phase 0新規追加**: +2時間（テスト環境構築）
 - **各Phaseテスト追加**: +15時間（Phase 1-9でテスト作成）
+- **Phase 12新規追加**: +3時間（PWA対応）
+- **Phase 13新規追加**: +15時間（新クイズ機能実装）
 - **Phase 10専門化**: -1時間（E2E専門化により効率化）
 - **Phase 11エラーテスト**: +1時間
 
@@ -612,3 +880,18 @@
    - すべての機能にテストを書く
    - エッジケース・境界値テストを含める
    - パフォーマンステストも実装する
+
+---
+
+## ✅ 承認
+
+この実装計画書は技術設計書（02_technical-design.md v2.2）のすべての要件を満たす計画となっています。
+
+- **作成日**: 2025-10-18
+- **バージョン**: 2.2
+- **準拠技術設計**: 02_technical-design.md v2.2
+- **更新日**: 2025-10-20
+- **変更履歴**:
+  - v2.0 (2025-10-18): TDD準拠版として全面改訂
+  - v2.1 (2025-10-20): Phase 12 PWA対応を追加（manifest.json + Service Worker + テスト）
+  - v2.2 (2025-10-20): Phase 13 新クイズ機能実装を追加（5種類のクイズタイプ + 星空連動 + テスト）

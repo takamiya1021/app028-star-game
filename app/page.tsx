@@ -31,9 +31,20 @@ export default function Home() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [isCanvasSupported, setCanvasSupported] = useState(true);
 
-  const { correctCount, totalCount, history } = useQuiz();
+  const { correctCount, totalCount, history, currentQuiz, submitAnswer } = useQuiz();
   const { settings } = useSettings();
   const breakpoint = useBreakpoint();
+
+  // クイズターゲット（星空自動移動用）
+  const quizTarget = useMemo(() => {
+    if (!currentQuiz || !currentQuiz.viewCenter || !currentQuiz.zoomLevel) {
+      return null;
+    }
+    return {
+      viewCenter: currentQuiz.viewCenter,
+      zoomLevel: currentQuiz.zoomLevel,
+    };
+  }, [currentQuiz]);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,6 +103,17 @@ export default function Home() {
     }
   }, []);
 
+  // 星クリック時の処理（find-starクイズ用）
+  const handleStarClick = useCallback((star: Star | null) => {
+    // find-starクイズでない場合は何もしない
+    if (!currentQuiz || currentQuiz.type !== 'find-star') return;
+
+    // 星がクリックされた場合、その星の固有名を回答として送信
+    if (star && star.properName) {
+      submitAnswer(star.properName);
+    }
+  }, [currentQuiz, submitAnswer]);
+
   useEffect(() => {
     if (breakpoint !== 'sm') {
       setMobileQuizOpen(false);
@@ -115,6 +137,13 @@ export default function Home() {
     return count;
   }, [history]);
 
+  // クイズ開始時に自動的にプラネタリウムビューに切り替え
+  useEffect(() => {
+    if (currentQuiz && projectionMode !== 'stereographic') {
+      setProjectionMode('stereographic');
+    }
+  }, [currentQuiz, projectionMode]);
+
   return (
     <PageTransition className="h-screen w-full overflow-hidden bg-gradient-to-br from-black via-slate-900 to-indigo-950">
       <StarField
@@ -130,9 +159,11 @@ export default function Home() {
           showBayerDesignations: settings.showBayerDesignations,
         }}
         milkyWayGlow={observationMode === 'telescope' ? 'telescope' : 'naked-eye'}
+        quizTarget={quizTarget}
+        onStarClick={handleStarClick}
       />
 
-      <header className="pointer-events-none absolute inset-x-0 top-6 flex justify-center px-4">
+      <header className="pointer-events-none absolute inset-x-0 top-6 hidden justify-center px-4 sm:flex">
         <FadeIn className="pointer-events-auto rounded-2xl bg-black/40 px-4 py-2 text-center text-white shadow-lg backdrop-blur" data-motion="fade-in-header">
           <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">✨ {APP_NAME} ✨</h1>
           <p className="mt-1 text-xs text-blue-100 sm:text-sm">

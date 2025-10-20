@@ -8,7 +8,7 @@ import QuizQuestion from './QuizQuestion';
 import QuizChoices from './QuizChoices';
 import QuizResult from './QuizResult';
 import { FadeIn } from '@/components/Animate/FadeIn';
-import type { Quiz } from '@/types/quiz';
+import type { Quiz, QuizType } from '@/types/quiz';
 
 export function QuizContainer() {
   const { settings } = useSettings();
@@ -26,8 +26,16 @@ export function QuizContainer() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const isFetchingRef = useRef(false);
+  const lastQuizTypeRef = useRef<QuizType | undefined>();
 
   const lastResult = useMemo(() => history[history.length - 1], [history]);
+
+  // currentQuizが変わったらlastQuizTypeRefを更新
+  useEffect(() => {
+    if (currentQuiz) {
+      lastQuizTypeRef.current = currentQuiz.type;
+    }
+  }, [currentQuiz]);
 
   const loadQuiz = useCallback(async () => {
     if (isFetchingRef.current) return;
@@ -56,6 +64,7 @@ export function QuizContainer() {
         : await generateQuiz({
             difficulty: settings.difficulty,
             category: settings.category,
+            lastQuizType: lastQuizTypeRef.current,
           });
       if (!isMountedRef.current) return;
       setNewQuiz(quiz);
@@ -118,12 +127,23 @@ export function QuizContainer() {
       {currentQuiz && status !== 'loading' && (
         <div className="space-y-6">
           <QuizQuestion quiz={currentQuiz} />
-          <QuizChoices
-            choices={currentQuiz.choices}
-            disabled={status === 'answered'}
-            selected={selectedChoice}
-            onSelect={handleSelect}
-          />
+
+          {/* クイズタイプ別の説明 */}
+          {currentQuiz.type === 'find-star' && (
+            <p className="text-sm text-blue-200">
+              💡 星空をクリック/タップして、対象の星を探してください
+            </p>
+          )}
+
+          {/* 選択肢型クイズの場合のみQuizChoicesを表示 */}
+          {currentQuiz.questionType !== 'interactive' && (
+            <QuizChoices
+              choices={currentQuiz.choices}
+              disabled={status === 'answered'}
+              selected={selectedChoice}
+              onSelect={handleSelect}
+            />
+          )}
         </div>
       )}
 

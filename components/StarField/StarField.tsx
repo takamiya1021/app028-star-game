@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Star } from '@/types/star';
-import { ProjectionMode, ObserverLocation } from '@/lib/canvas/coordinateUtils';
+import { ProjectionMode, ObserverLocation, celestialToScreen } from '@/lib/canvas/coordinateUtils';
 import { drawStars } from '@/lib/canvas/starRenderer';
 
 interface StarFieldProps {
@@ -18,6 +18,11 @@ interface StarFieldProps {
     showBayerDesignations: boolean;
   };
   milkyWayGlow?: 'telescope' | 'naked-eye' | false;
+  quizTarget?: {
+    viewCenter: { ra: number; dec: number };
+    zoomLevel: number;
+  } | null;
+  onStarClick?: (star: Star | null) => void;
 }
 
 // 東京の位置と観測日時（2025年1月1日 00:00:00 JST = 2024年12月31日 15:00:00 UTC）
@@ -45,6 +50,8 @@ export default function StarField({
   onCanvasSupportChange,
   labelPreferences,
   milkyWayGlow = 'telescope',
+  quizTarget,
+  onStarClick,
 }: StarFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
@@ -75,6 +82,51 @@ export default function StarField({
   useEffect(() => {
     projectionModeRef.current = projectionMode;
   }, [projectionMode]);
+
+  // クイズターゲットへの自動移動（スムーズアニメーション）
+  useEffect(() => {
+    if (!quizTarget) return;
+
+    const targetViewCenter = quizTarget.viewCenter;
+    const targetZoom = quizTarget.zoomLevel;
+    const duration = 1000; // 1秒でアニメーション
+    const startTime = Date.now();
+
+    // アニメーション開始時点のviewCenterとzoomを意図的にキャプチャ
+    const startViewCenter = { ...viewCenter };
+    const startZoom = zoom;
+
+    // イージング関数（ease-in-out）
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      // 赤経の補間（360度の折り返しを考慮）
+      let raDiff = targetViewCenter.ra - startViewCenter.ra;
+      if (raDiff > 180) raDiff -= 360;
+      if (raDiff < -180) raDiff += 360;
+      const newRA = (startViewCenter.ra + raDiff * easedProgress + 360) % 360;
+
+      // 赤緯とズームの補間
+      const newDec = startViewCenter.dec + (targetViewCenter.dec - startViewCenter.dec) * easedProgress;
+      const newZoom = startZoom + (targetZoom - startZoom) * easedProgress;
+
+      setViewCenter({ ra: newRA, dec: newDec });
+      setZoom(newZoom);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quizTarget]);
 
   // キャンバスサイズ調整
   useEffect(() => {
@@ -166,6 +218,66 @@ export default function StarField({
     if (canvas) canvas.style.cursor = 'grab';
   }, []);
 
+  // クリック座標から最も近い星を特定する関数
+  const findNearestStar = useCallback((canvasX: number, canvasY: number): Star | null => {
+    const canvas = canvasRef.current;
+    if (!canvas || !onStarClick) return null;
+
+    // Canvas座標を取得
+    const rect = canvas.getBoundingClientRect();
+    const clickX = canvasX - rect.left;
+    const clickY = canvasY - rect.top;
+
+    // 表示されている星の中から最も近い星を探す
+    let nearestStar: Star | null = null;
+    let minDistance = 50; // 50px以内の星のみ対象
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // すべての星をチェックして、クリック位置に最も近い星を見つける
+    for (const star of stars) {
+      if (star.vmag === null || star.vmag > 6) continue; // 6等級より明るい星のみ
+
+      // 星のCanvas座標を計算
+      const screenPos = celestialToScreen(
+        star.ra,
+        star.dec,
+        viewCenter,
+        zoom,
+        canvasWidth,
+        canvasHeight,
+        projectionMode,
+        TOKYO_OBSERVER
+      );
+
+      if (!screenPos) continue; // 画面外の星はスキップ
+
+      // クリック位置との距離を計算
+      const dx = screenPos.x - clickX;
+      const dy = screenPos.y - clickY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // より近い星を記録
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestStar = star;
+      }
+    }
+
+    return nearestStar;
+  }, [stars, onStarClick, viewCenter, zoom, projectionMode]);
+
+  // クリックイベントハンドラ
+  const handleClick = useCallback((e: MouseEvent) => {
+    // ドラッグ操作の場合はクリックとして扱わない
+    if (isDraggingRef.current) return;
+    if (!onStarClick) return;
+
+    const nearestStar = findNearestStar(e.clientX, e.clientY);
+    onStarClick(nearestStar);
+  }, [findNearestStar, onStarClick]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -176,6 +288,9 @@ export default function StarField({
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mouseleave', handleMouseLeave);
+    if (onStarClick) {
+      canvas.addEventListener('click', handleClick);
+    }
 
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
@@ -183,8 +298,11 @@ export default function StarField({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
+      if (onStarClick) {
+        canvas.removeEventListener('click', handleClick);
+      }
     };
-  }, [handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave]);
+  }, [handleWheel, handleMouseDown, handleMouseMove, handleMouseUp, handleMouseLeave, handleClick, onStarClick]);
 
   // タッチ操作でピンチズーム & スワイプ移動
   useEffect(() => {
@@ -219,14 +337,15 @@ export default function StarField({
 
         setZoom((prevZoom) => Math.max(0.5, Math.min(20.0, prevZoom * scale)));
       } else if (e.touches.length === 1 && lastTouchPosRef.current) {
+        const mode = projectionModeRef.current;
         const deltaX = e.touches[0].clientX - lastTouchPosRef.current.x;
         const deltaY = e.touches[0].clientY - lastTouchPosRef.current.y;
         const sensitivity = 0.2 / zoomRef.current;
-        const deltaRA = deltaX * sensitivity;
+        const deltaRA = mode === 'stereographic' ? deltaX * sensitivity : -deltaX * sensitivity;
         const deltaDec = deltaY * sensitivity;
 
         setViewCenterThrottled((prev) => ({
-          ra: (prev.ra - deltaRA + 360) % 360,
+          ra: (prev.ra + deltaRA + 360) % 360,
           dec: Math.max(-90, Math.min(90, prev.dec + deltaDec)),
         }));
 
