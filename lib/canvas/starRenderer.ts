@@ -371,22 +371,29 @@ export function drawStars(
 
   // 表示範囲の情報を画面に表示
   if (!skipOverlay) {
+    // テキスト幅を測定して必要最小限の矩形サイズを計算
+    ctx.font = '12px monospace';
+    const longestText = `星の数: ${visibleCount} / ${stars.length}`;
+    const textWidth = ctx.measureText(longestText).width;
+    const boxWidth = textWidth + 20; // 左右パディング10pxずつ
+    const boxHeight = 130;
+
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(5, 5, 350, 170);
+    ctx.fillRect(5, 5, boxWidth, boxHeight);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '16px monospace';
-    ctx.fillText(`📊 表示情報`, 15, 25);
-
     ctx.font = '14px monospace';
-    ctx.fillText(`星の数: ${visibleCount} / ${stars.length}`, 15, 50);
-    ctx.fillText(`視野中心:`, 15, 70);
-    ctx.fillText(`  赤経 ${viewCenter.ra.toFixed(1)}°`, 15, 90);
-    ctx.fillText(`  赤緯 ${viewCenter.dec.toFixed(1)}°`, 15, 110);
+    ctx.fillText(`📊 表示情報`, 10, 22);
+
+    ctx.font = '12px monospace';
+    ctx.fillText(`星の数: ${visibleCount} / ${stars.length}`, 10, 42);
+    ctx.fillText(`視野中心:`, 10, 62);
+    ctx.fillText(`  赤経 ${viewCenter.ra.toFixed(1)}°`, 10, 78);
+    ctx.fillText(`  赤緯 ${viewCenter.dec.toFixed(1)}°`, 10, 94);
 
     const fov = 90 / zoom; // 視野角
-    ctx.fillText(`表示範囲:`, 15, 135);
-    ctx.fillText(`  視野角: ${Math.round(fov)}°`, 15, 155);
+    ctx.fillText(`表示範囲:`, 10, 114);
+    ctx.fillText(`  視野角: ${Math.round(fov)}°`, 10, 130);
   }
 
   if (observerCallback) {

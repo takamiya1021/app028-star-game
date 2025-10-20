@@ -184,10 +184,10 @@ export default function Home() {
         <QuizContainer />
       </aside>
 
-      <div className="pointer-events-auto absolute left-1/2 top-[48%] hidden -translate-x-1/2 flex-col items-center gap-1 rounded-2xl bg-black/35 px-4 py-3 text-white shadow-lg backdrop-blur md:flex xl:hidden">
-        <p className="text-sm font-semibold">現在の空</p>
-        <p className="text-xs text-blue-100">表示中: {visibleStarCount.toLocaleString()} 個</p>
-        <p className="text-xs text-blue-100">データ総数: {allStars.length.toLocaleString()} 件</p>
+      <div className="pointer-events-auto absolute left-1/2 top-[48%] hidden w-fit -translate-x-1/2 flex-col items-center rounded bg-black/35 text-white shadow backdrop-blur md:flex xl:hidden">
+        <p className="m-0 text-[8px] font-semibold leading-none">現在の空</p>
+        <p className="m-0 text-[7px] leading-none text-blue-100">表示中: {visibleStarCount.toLocaleString()} 個</p>
+        <p className="m-0 text-[7px] leading-none text-blue-100">データ総数: {allStars.length.toLocaleString()} 件</p>
       </div>
 
       {isMobileQuizOpen && (
