@@ -17,10 +17,12 @@ export function QuizContainer() {
     setNewQuiz,
     submitAnswer,
     history,
+    correctCount,
+    totalCount,
   } = useQuiz();
 
   const [status, setStatus] = useState<'loading' | 'ready' | 'answered' | 'error'>('loading');
-  const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
+  const [selectedChoice, setSelectedChoice] = useState<{ quizId: string; choice: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const isFetchingRef = useRef(false);
@@ -32,6 +34,20 @@ export function QuizContainer() {
   useEffect(() => {
     if (currentQuiz) {
       lastQuizTypeRef.current = currentQuiz.type;
+    }
+  }, [currentQuiz]);
+
+  // 回答が追加されたら自動的にstatusを'answered'に変更（find-starクイズ対応）
+  useEffect(() => {
+    if (lastResult && status === 'ready' && currentQuiz && lastResult.quiz.id === currentQuiz.id) {
+      setStatus('answered');
+    }
+  }, [lastResult, status, currentQuiz]);
+
+  // クイズが変わったらselectedChoiceをリセット
+  useEffect(() => {
+    if (currentQuiz) {
+      setSelectedChoice(null);
     }
   }, [currentQuiz]);
 
@@ -89,7 +105,7 @@ export function QuizContainer() {
     (choice: string) => {
       if (!currentQuiz || status !== 'ready') return;
       submitAnswer(choice);
-      setSelectedChoice(choice);
+      setSelectedChoice({ quizId: currentQuiz.id, choice });
       setStatus('answered');
     },
     [currentQuiz, status, submitAnswer]
@@ -97,6 +113,7 @@ export function QuizContainer() {
 
   const handleNextQuiz = useCallback(() => {
     if (status === 'loading') return;
+    setSelectedChoice(null);
     loadQuiz();
   }, [loadQuiz, status]);
 
@@ -105,6 +122,19 @@ export function QuizContainer() {
       className="pointer-events-auto space-y-3 rounded-xl border border-white/10 bg-black/40 p-3 shadow-lg sm:space-y-6 sm:p-6"
       data-testid="quiz-container"
     >
+      {/* スコアバー（デスクトップのみ） */}
+      <div className="hidden xl:flex items-center gap-3">
+        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
+            style={{ width: `${Math.round((correctCount / 10) * 100)}%` }}
+          />
+        </div>
+        <span className="text-sm font-semibold text-blue-200 whitespace-nowrap">
+          {correctCount}/10
+        </span>
+      </div>
+
       {/* デスクトップのみローディング表示 */}
           {status === 'loading' && (
             <p className="hidden sm:block text-sm text-blue-100">クイズを読み込み中...</p>
@@ -117,7 +147,7 @@ export function QuizContainer() {
             </div>
           )}
 
-          {currentQuiz && status !== 'loading' && (
+          {currentQuiz && status !== 'loading' && status !== 'error' && (
             <div className="space-y-3 sm:space-y-6">
               {/* 質問文表示（全画面） */}
               <QuizQuestion quiz={currentQuiz} />
@@ -129,12 +159,13 @@ export function QuizContainer() {
                 </p>
               )}
 
-              {/* 選択肢型クイズの場合のみQuizChoicesを表示 */}
-              {currentQuiz.questionType !== 'interactive' && (
+              {/* 選択肢型クイズの場合のみQuizChoicesを表示（answered状態では非表示） */}
+              {currentQuiz.questionType !== 'interactive' && status === 'ready' && (
                 <QuizChoices
+                  key={currentQuiz.id}
                   choices={currentQuiz.choices}
-                  disabled={status === 'answered'}
-                  selected={selectedChoice}
+                  disabled={false}
+                  selected={selectedChoice?.quizId === currentQuiz.id ? selectedChoice.choice : null}
                   onSelect={handleSelect}
                 />
               )}

@@ -204,11 +204,11 @@ export default function Home() {
                   <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-500"
-                      style={{ width: `${totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0}%` }}
+                      style={{ width: `${Math.round((correctCount / 10) * 100)}%` }}
                     />
                   </div>
                   <span className="text-sm font-semibold text-blue-200 whitespace-nowrap">
-                    {correctCount}/{totalCount}
+                    {correctCount}/10
                   </span>
                 </div>
                 <button
@@ -270,7 +270,7 @@ export default function Home() {
             >
               クイズを開く
               <span className="ml-3 rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold">
-                {correctCount}/{totalCount || 0}
+                {correctCount}/10
               </span>
             </button>
           </div>

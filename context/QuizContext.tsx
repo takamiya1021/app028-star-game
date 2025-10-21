@@ -34,15 +34,16 @@ function quizReducer(state: QuizState, action: Action): QuizState {
       return {
         ...state,
         currentQuiz: action.quiz,
-        totalCount: state.totalCount + 1,
       };
     case 'SUBMIT_ANSWER':
       if (!state.currentQuiz) return state;
       const isCorrect = state.currentQuiz.correctAnswer === action.answer;
       return {
         ...state,
-        currentQuiz: null,
-        correctCount: isCorrect ? state.correctCount + 1 : state.correctCount,
+        correctCount: isCorrect
+          ? state.correctCount + 1
+          : Math.max(0, state.correctCount - 1),
+        totalCount: state.totalCount + 1,
         history: [
           ...state.history,
           {
