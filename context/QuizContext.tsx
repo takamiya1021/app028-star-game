@@ -42,7 +42,7 @@ function quizReducer(state: QuizState, action: Action): QuizState {
         ...state,
         correctCount: isCorrect
           ? state.correctCount + 1
-          : Math.max(0, state.correctCount - 1),
+          : state.correctCount, // 不正解の時は減らさない
         totalCount: state.totalCount + 1,
         history: [
           ...state.history,

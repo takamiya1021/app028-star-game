@@ -18,15 +18,16 @@ export function QuizContainer() {
     submitAnswer,
     history,
     correctCount,
-    totalCount,
+    reset,
   } = useQuiz();
 
-  const [status, setStatus] = useState<'loading' | 'ready' | 'answered' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'answered' | 'error' | 'idle'>('loading');
   const [selectedChoice, setSelectedChoice] = useState<{ quizId: string; choice: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const isFetchingRef = useRef(false);
   const lastQuizTypeRef = useRef<QuizType | undefined>();
+  const ignoreResultRef = useRef(false);
 
   const lastResult = useMemo(() => history[history.length - 1], [history]);
 
@@ -36,6 +37,12 @@ export function QuizContainer() {
       lastQuizTypeRef.current = currentQuiz.type;
     }
   }, [currentQuiz]);
+
+  useEffect(() => {
+    if (!currentQuiz && !isFetchingRef.current && (status === 'ready' || status === 'answered')) {
+      setStatus('idle');
+    }
+  }, [currentQuiz, status]);
 
   // 回答が追加されたら自動的にstatusを'answered'に変更（find-starクイズ対応）
   useEffect(() => {
@@ -81,6 +88,11 @@ export function QuizContainer() {
             lastQuizType: lastQuizTypeRef.current,
           });
       if (!isMountedRef.current) return;
+      if (ignoreResultRef.current) {
+        ignoreResultRef.current = false;
+        setStatus('idle');
+        return;
+      }
       setNewQuiz(quiz);
       setStatus('ready');
     } catch (error) {
@@ -117,6 +129,14 @@ export function QuizContainer() {
     loadQuiz();
   }, [loadQuiz, status]);
 
+  const handleQuit = useCallback(() => {
+    ignoreResultRef.current = isFetchingRef.current;
+    reset();
+    setSelectedChoice(null);
+    setStatus('idle');
+    isFetchingRef.current = false;
+  }, [reset]);
+
   return (
     <FadeIn
       className="pointer-events-auto space-y-3 rounded-xl border border-white/10 bg-black/40 p-3 shadow-lg sm:space-y-6 sm:p-6"
@@ -147,6 +167,20 @@ export function QuizContainer() {
             </div>
           )}
 
+      {status === 'idle' && (
+        <div className="space-y-3 rounded-md border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
+          <p className="font-semibold text-white">クイズは終了しました。</p>
+          <p>「新しいクイズを始める」を押すと、いつでも再開できます。</p>
+          <button
+            type="button"
+            onClick={() => loadQuiz()}
+            className="rounded-lg bg-blue-600/80 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            新しいクイズを始める
+          </button>
+        </div>
+      )}
+
           {currentQuiz && status !== 'loading' && status !== 'error' && (
             <div className="space-y-3 sm:space-y-6">
               {/* 質問文表示（全画面） */}
@@ -174,6 +208,19 @@ export function QuizContainer() {
 
       {/* 回答後のみ結果表示 */}
       {status === 'answered' && <QuizResult result={lastResult} onNext={handleNextQuiz} />}
+
+      {(status === 'ready' || status === 'answered' || status === 'loading') && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleQuit}
+            className="inline-flex items-center gap-1 rounded-lg border border-red-500/40 bg-red-600/80 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed"
+            disabled={status === 'loading'}
+          >
+            クイズを終了
+          </button>
+        </div>
+      )}
     </FadeIn>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import StarField from '@/components/StarField/StarField';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import type { ChangeEvent } from 'react';
+import StarField, { FocusProgram as StarFieldFocusProgram } from '@/components/StarField/StarField';
 import { ProjectionMode } from '@/lib/canvas/coordinateUtils';
 import {
   ObservationMode,
@@ -10,7 +11,10 @@ import {
   OBSERVATION_MODE_ICONS,
 } from '@/types/observationMode';
 import type { Star } from '@/types/star';
+import type { ConstellationLine, Constellation } from '@/types/constellation';
 import { loadStars } from '@/lib/data/starsLoader';
+import { loadConstellationLines } from '@/lib/data/constellationLinesLoader';
+import { loadConstellations } from '@/lib/data/constellationsLoader';
 import QuizContainer from '@/components/Quiz/QuizContainer';
 import { useQuiz } from '@/context/QuizContext';
 import { useSettings } from '@/context/SettingsContext';
@@ -20,30 +24,68 @@ import { FadeIn } from '@/components/Animate/FadeIn';
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Stellarium Quiz';
 
+const DEFAULT_VIEW_CENTER = { ra: 90, dec: 0 };
+const DEFAULT_ZOOM_LEVEL = 2.0;
+
+interface ConstellationFocus {
+  viewCenter: { ra: number; dec: number };
+  zoomLevel: number;
+}
+
+interface ConstellationOption extends ConstellationFocus {
+  id: string;
+  labelJa: string;
+  labelEn: string;
+}
+
 export default function Home() {
   const [visibleStarCount, setVisibleStarCount] = useState(0);
   const [projectionMode, setProjectionMode] = useState<ProjectionMode>('orthographic');
   const [observationMode, setObservationMode] = useState<ObservationMode>('naked-eye');
   const [allStars, setAllStars] = useState<Star[]>([]);
+  const [constellationLines, setConstellationLines] = useState<ConstellationLine[]>([]);
+  const [constellations, setConstellations] = useState<Constellation[]>([]);
   const [isMobileQuizOpen, setMobileQuizOpen] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [isCanvasSupported, setCanvasSupported] = useState(true);
+  const [focusProgram, setFocusProgram] = useState<StarFieldFocusProgram | null>(null);
+  const [lastCompletedProgramId, setLastCompletedProgramId] = useState<string | null>(null);
+  const currentViewStateRef = useRef({
+    viewCenter: { ...DEFAULT_VIEW_CENTER },
+    zoom: DEFAULT_ZOOM_LEVEL,
+  });
+  const [selectedConstellationId, setSelectedConstellationId] = useState<string>('');
 
-  const { currentQuiz, submitAnswer, correctCount, totalCount } = useQuiz();
-  const { settings } = useSettings();
+  const { currentQuiz, submitAnswer, correctCount } = useQuiz();
+  const { settings, updateSettings } = useSettings();
   const breakpoint = useBreakpoint();
 
-  // クイズターゲット（星空自動移動用）
-  const quizTarget = useMemo(() => {
+  const quizProgram = useMemo<StarFieldFocusProgram | null>(() => {
     if (!currentQuiz || !currentQuiz.viewCenter || !currentQuiz.zoomLevel) {
       return null;
     }
     return {
-      viewCenter: currentQuiz.viewCenter,
-      zoomLevel: currentQuiz.zoomLevel,
+      id: `quiz-${currentQuiz.id}`,
+      steps: [
+        {
+          viewCenter: currentQuiz.viewCenter,
+          zoomLevel: currentQuiz.zoomLevel,
+          duration: 800,
+        },
+      ],
     };
   }, [currentQuiz]);
+
+  const activeFocusProgram = useMemo<StarFieldFocusProgram | null>(() => {
+    if (focusProgram) {
+      return focusProgram;
+    }
+    if (quizProgram && quizProgram.id !== lastCompletedProgramId) {
+      return quizProgram;
+    }
+    return null;
+  }, [focusProgram, quizProgram, lastCompletedProgramId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +109,28 @@ export default function Home() {
     };
   }, [loadAttempt]);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchConstellationData() {
+      try {
+        const [linesData, constellationsData] = await Promise.all([
+          loadConstellationLines(),
+          loadConstellations(),
+        ]);
+        if (!cancelled) {
+          setConstellationLines(linesData);
+          setConstellations(constellationsData);
+        }
+      } catch (error) {
+        console.error('星座データの読み込みに失敗しました', error);
+      }
+    }
+    fetchConstellationData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const stars = useMemo(() => {
     if (allStars.length === 0) {
       return [] as Star[];
@@ -76,6 +140,118 @@ export default function Home() {
     }
     return allStars;
   }, [allStars, observationMode]);
+
+  const constellationFocusMap = useMemo(() => {
+    if (constellationLines.length === 0 || allStars.length === 0) {
+      return new Map<string, ConstellationFocus>();
+    }
+
+    const starMap = new Map<number, Star>();
+    allStars.forEach((star) => {
+      starMap.set(star.id, star);
+    });
+
+    const toRadians = (deg: number) => (deg * Math.PI) / 180;
+    const toDegrees = (rad: number) => (rad * 180) / Math.PI;
+
+    const computeFocus = (starsInConstellation: Star[]): ConstellationFocus => {
+      if (starsInConstellation.length === 0) {
+        return {
+          viewCenter: { ra: 0, dec: 0 },
+          zoomLevel: 1.5,
+        };
+      }
+
+      let sumX = 0;
+      let sumY = 0;
+      let sumDec = 0;
+      starsInConstellation.forEach((star) => {
+        const raRad = toRadians(star.ra);
+        sumX += Math.cos(raRad);
+        sumY += Math.sin(raRad);
+        sumDec += star.dec;
+      });
+
+      const avgRaRad = Math.atan2(sumY / starsInConstellation.length, sumX / starsInConstellation.length);
+      const avgRa = (toDegrees(avgRaRad) + 360) % 360;
+      const avgDec = sumDec / starsInConstellation.length;
+      const center = { ra: avgRa, dec: avgDec };
+
+      const raOffsets = starsInConstellation.map((star) => {
+        let diff = star.ra - center.ra;
+        diff = ((diff + 540) % 360) - 180; // [-180, 180]
+        return diff;
+      });
+      const raSpan = Math.max(...raOffsets) - Math.min(...raOffsets);
+      const decValues = starsInConstellation.map((star) => star.dec);
+      const decSpan = Math.max(...decValues) - Math.min(...decValues);
+      const maxSpan = Math.max(raSpan, decSpan);
+
+      let zoomLevel = 1.5;
+      if (maxSpan > 50) zoomLevel = 0.5;
+      else if (maxSpan > 30) zoomLevel = 0.8;
+      else if (maxSpan > 20) zoomLevel = 1.0;
+      else if (maxSpan > 15) zoomLevel = 1.2;
+
+      return { viewCenter: center, zoomLevel };
+    };
+
+    const map = new Map<string, ConstellationFocus>();
+
+    constellationLines.forEach((entry) => {
+      const uniqueStarIds = new Set<number>();
+      entry.lines.forEach((line) => {
+        if (Array.isArray(line)) {
+          line.forEach((id) => {
+            if (typeof id === 'number') {
+              uniqueStarIds.add(id);
+            }
+          });
+        }
+      });
+
+      const starsInConstellation: Star[] = [];
+      uniqueStarIds.forEach((id) => {
+        const star = starMap.get(id);
+        if (star) {
+          starsInConstellation.push(star);
+        }
+      });
+
+      if (starsInConstellation.length === 0) {
+        return;
+      }
+
+      const focus = computeFocus(starsInConstellation);
+      map.set(entry.constellationId, focus);
+    });
+
+    return map;
+  }, [constellationLines, allStars]);
+
+  const constellationOptions = useMemo(() => {
+    if (constellations.length === 0 || constellationFocusMap.size === 0) {
+      return [] as ConstellationOption[];
+    }
+    const collator = new Intl.Collator('ja');
+    return constellations
+      .map((cons) => {
+        const focus = constellationFocusMap.get(cons.id);
+        if (!focus) return null;
+        return {
+          id: cons.id,
+          labelJa: cons.nameJa,
+          labelEn: cons.name,
+          viewCenter: focus.viewCenter,
+          zoomLevel: focus.zoomLevel,
+        } satisfies ConstellationOption;
+      })
+      .filter((item): item is ConstellationOption => item !== null)
+      .sort((a, b) => collator.compare(a.labelJa, b.labelJa));
+  }, [constellations, constellationFocusMap]);
+
+  const isConstellationSelectorReady = constellationOptions.length > 0;
+  const showConstellationLines = settings.showConstellationLines;
 
   const toggleProjection = useCallback(() => {
     setProjectionMode((prev) => (prev === 'orthographic' ? 'stereographic' : 'orthographic'));
@@ -93,6 +269,64 @@ export default function Home() {
 
   const retryLoadStars = useCallback(() => {
     setLoadAttempt((prev) => prev + 1);
+  }, []);
+
+  const handleViewStateChange = useCallback((state: { viewCenter: { ra: number; dec: number }; zoom: number }) => {
+    currentViewStateRef.current = {
+      viewCenter: { ...state.viewCenter },
+      zoom: state.zoom,
+    };
+  }, []);
+
+  const handleToggleConstellationLines = useCallback(() => {
+    updateSettings({ showConstellationLines: !settings.showConstellationLines });
+  }, [settings.showConstellationLines, updateSettings]);
+
+  const handleSelectConstellation = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      const { value } = event.target;
+      setSelectedConstellationId(value);
+      if (!value) return;
+
+      const focus = constellationFocusMap.get(value);
+      if (!focus) return;
+
+      setProjectionMode('stereographic');
+      const targetView = { ...focus.viewCenter };
+      const targetZoom = Math.max(1.8, Math.min(focus.zoomLevel, 5));
+      const initialView = {
+        viewCenter: { ...currentViewStateRef.current.viewCenter },
+        zoomLevel: currentViewStateRef.current.zoom,
+      };
+
+      setFocusProgram({
+        id: `manual-${Date.now()}`,
+        steps: [
+          {
+            viewCenter: targetView,
+            zoomLevel: targetZoom,
+            duration: 1200,
+            hold: 1400,
+          },
+          {
+            viewCenter: { ...initialView.viewCenter },
+            zoomLevel: initialView.zoomLevel,
+            duration: 1000,
+          },
+        ],
+      });
+    },
+    [constellationFocusMap]
+  );
+
+  const handleFocusSequenceComplete = useCallback((completedId: string) => {
+    setLastCompletedProgramId(completedId);
+    setFocusProgram((prev) => {
+      if (prev && prev.id === completedId) {
+        return null;
+      }
+      return prev;
+    });
   }, []);
 
   const handleCanvasSupportChange = useCallback((supported: boolean) => {
@@ -126,12 +360,18 @@ export default function Home() {
     }
   }, [currentQuiz, projectionMode]);
 
+  useEffect(() => {
+    if (!currentQuiz) return;
+    setSelectedConstellationId('');
+  }, [currentQuiz]);
+
   return (
     <PageTransition className="h-screen w-full overflow-hidden bg-gradient-to-br from-black via-slate-900 to-indigo-950">
       <StarField
         stars={stars}
-        viewCenter={{ ra: 90, dec: 0 }}
-        zoom={2.0}
+        constellationLines={constellationLines}
+        viewCenter={DEFAULT_VIEW_CENTER}
+        zoom={DEFAULT_ZOOM_LEVEL}
         className="h-full w-full"
         onVisibleCountChange={setVisibleStarCount}
         projectionMode={projectionMode}
@@ -140,8 +380,11 @@ export default function Home() {
           showProperNames: settings.showProperNames,
           showBayerDesignations: settings.showBayerDesignations,
         }}
+        showConstellationLines={settings.showConstellationLines}
         milkyWayGlow={observationMode === 'telescope' ? 'telescope' : 'naked-eye'}
-        quizTarget={quizTarget}
+        focusProgram={activeFocusProgram}
+        onFocusSequenceComplete={handleFocusSequenceComplete}
+        onViewStateChange={handleViewStateChange}
         onStarClick={handleStarClick}
       />
 
@@ -256,8 +499,45 @@ export default function Home() {
                 <span className="text-xl">{OBSERVATION_MODE_ICONS[observationMode]}</span>
                 <span>{OBSERVATION_MODE_LABELS[observationMode]}</span>
               </span>
-              <span className="text-xs text-purple-50/80">{OBSERVATION_MODE_DESCRIPTIONS[observationMode]}</span>
+              <span className="text-xs text-purple-50/80">{observationMode === 'naked-eye' ? '7等星まで表示' : OBSERVATION_MODE_DESCRIPTIONS[observationMode]}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={handleToggleConstellationLines}
+              className={`inline-flex h-10 max-w-[160px] items-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-white shadow-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                showConstellationLines
+                  ? 'bg-sky-600/80 hover:bg-sky-500/90'
+                  : 'bg-slate-700/80 hover:bg-slate-600/90'
+              }`}
+              aria-pressed={showConstellationLines}
+              aria-label="星座線の表示を切り替える"
+            >
+              <span className="flex items-center gap-2">
+                <span className="text-xl">{showConstellationLines ? '✨' : '🚫'}</span>
+                <span>星座線</span>
+              </span>
+            </button>
+
+            <div className="inline-flex h-10 max-w-[160px] items-center gap-2 rounded-lg bg-indigo-500/80 px-2.5 text-white shadow-lg transition focus-within:ring-2 focus-within:ring-white/80 sm:max-w-[150px]">
+              <span className="text-base" aria-hidden="true">🧭</span>
+              <select
+                value={selectedConstellationId}
+                onChange={handleSelectConstellation}
+                disabled={!isConstellationSelectorReady}
+                className="h-7 min-w-[110px] rounded-md border border-white/30 bg-indigo-600/85 px-1.5 text-xs font-medium text-white outline-none transition focus:border-white focus:ring-2 focus:ring-white/80 disabled:cursor-not-allowed disabled:opacity-60"
+                aria-label="表示する星座を選択する"
+              >
+                <option value="">
+                  {isConstellationSelectorReady ? '星座を選択' : '星座を読み込み中...'}
+                </option>
+                {constellationOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.labelJa} / {option.labelEn}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end">

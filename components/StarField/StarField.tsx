@@ -2,11 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Star } from '@/types/star';
+import type { ConstellationLine } from '@/types/constellation';
 import { ProjectionMode, ObserverLocation, celestialToScreen } from '@/lib/canvas/coordinateUtils';
 import { drawStars } from '@/lib/canvas/starRenderer';
+import { drawConstellationLines } from '@/lib/canvas/constellationRenderer';
+
+export interface FocusStep {
+  viewCenter: { ra: number; dec: number };
+  zoomLevel: number;
+  duration?: number;
+  hold?: number;
+}
+
+export interface FocusProgram {
+  id: string;
+  steps: FocusStep[];
+}
 
 interface StarFieldProps {
   stars: Star[];
+  constellationLines?: ConstellationLine[];
   viewCenter?: { ra: number; dec: number };
   zoom?: number;
   className?: string;
@@ -17,11 +32,11 @@ interface StarFieldProps {
     showProperNames: boolean;
     showBayerDesignations: boolean;
   };
+  showConstellationLines?: boolean;
   milkyWayGlow?: 'telescope' | 'naked-eye' | false;
-  quizTarget?: {
-    viewCenter: { ra: number; dec: number };
-    zoomLevel: number;
-  } | null;
+  focusProgram?: FocusProgram | null;
+  onFocusSequenceComplete?: (id: string) => void;
+  onViewStateChange?: (state: { viewCenter: { ra: number; dec: number }; zoom: number }) => void;
   onStarClick?: (star: Star | null) => void;
 }
 
@@ -42,6 +57,7 @@ const getTimestamp = () => (
 
 export default function StarField({
   stars,
+  constellationLines = [],
   viewCenter: initialViewCenter = { ra: 180, dec: 0 },
   zoom: initialZoom = 1.5,
   className = '',
@@ -49,15 +65,20 @@ export default function StarField({
   projectionMode = 'orthographic',
   onCanvasSupportChange,
   labelPreferences,
+  showConstellationLines = true,
   milkyWayGlow = 'telescope',
-  quizTarget,
+  focusProgram,
+  onFocusSequenceComplete,
+  onViewStateChange,
   onStarClick,
 }: StarFieldProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
   const [zoom, setZoom] = useState(initialZoom);
   const [viewCenter, setViewCenter] = useState(initialViewCenter);
+  const viewCenterRef = useRef(viewCenter);
   const animationRef = useRef<number>();
+  const focusAnimationRef = useRef<number | null>(null);
   const visibleCountRef = useRef<number>(0);
   const lastPanUpdateRef = useRef<number>(Number.NEGATIVE_INFINITY);
 
@@ -75,58 +96,132 @@ export default function StarField({
     [labelPreferences?.showProperNames, labelPreferences?.showBayerDesignations]
   );
 
+  // 星座線描画用の星インデックス
+  const starIndex = useMemo(() => {
+    const index = new Map<number, Star>();
+    stars.forEach((star) => {
+      index.set(star.id, star);
+    });
+    return index;
+  }, [stars]);
+
   useEffect(() => {
     zoomRef.current = zoom;
   }, [zoom]);
 
   useEffect(() => {
+    viewCenterRef.current = viewCenter;
+  }, [viewCenter]);
+
+  useEffect(() => {
     projectionModeRef.current = projectionMode;
   }, [projectionMode]);
 
-  // クイズターゲットへの自動移動（スムーズアニメーション）
   useEffect(() => {
-    if (!quizTarget) return;
+    if (!onViewStateChange) return;
+    onViewStateChange({ viewCenter: { ...viewCenter }, zoom });
+  }, [viewCenter, zoom, onViewStateChange]);
 
-    const targetViewCenter = quizTarget.viewCenter;
-    const targetZoom = quizTarget.zoomLevel;
-    const duration = 1000; // 1秒でアニメーション
-    const startTime = Date.now();
+  // フォーカスプログラムによる自動移動
+  useEffect(() => {
+    if (!focusProgram || focusProgram.steps.length === 0) return;
 
-    // アニメーション開始時点のviewCenterとzoomを意図的にキャプチャ
-    const startViewCenter = { ...viewCenter };
-    const startZoom = zoom;
+    let cancelled = false;
+    let holdTimeout: ReturnType<typeof setTimeout> | null = null;
 
-    // イージング関数（ease-in-out）
-    const easeInOutCubic = (t: number): number => {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const easeInOutCubic = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
+    const animateToStep = (step: FocusStep): Promise<void> => {
+      const duration = step.duration ?? 1000;
+      if (duration <= 0) {
+        const finalView = { ...step.viewCenter };
+        setViewCenter(finalView);
+        viewCenterRef.current = finalView;
+        setZoom(step.zoomLevel);
+        zoomRef.current = step.zoomLevel;
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve) => {
+        const startView = viewCenterRef.current;
+        const startZoom = zoomRef.current;
+        const startTime = performance.now();
+
+        const animate = (now: number) => {
+          if (cancelled) {
+            resolve();
+            return;
+          }
+
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = easeInOutCubic(progress);
+
+          let raDiff = step.viewCenter.ra - startView.ra;
+          if (raDiff > 180) raDiff -= 360;
+          if (raDiff < -180) raDiff += 360;
+          const newRA = (startView.ra + raDiff * eased + 360) % 360;
+
+          const newDec = startView.dec + (step.viewCenter.dec - startView.dec) * eased;
+          const newZoom = startZoom + (step.zoomLevel - startZoom) * eased;
+
+          if (progress < 1) {
+            const intermediateView = { ra: newRA, dec: newDec };
+            setViewCenter(intermediateView);
+            viewCenterRef.current = intermediateView;
+            setZoom(newZoom);
+            focusAnimationRef.current = requestAnimationFrame(animate);
+          } else {
+            const finalView = { ...step.viewCenter };
+            setViewCenter(finalView);
+            viewCenterRef.current = finalView;
+            setZoom(step.zoomLevel);
+            zoomRef.current = step.zoomLevel;
+            focusAnimationRef.current = null;
+            resolve();
+          }
+        };
+
+        focusAnimationRef.current = requestAnimationFrame(animate);
+      });
     };
 
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOutCubic(progress);
-
-      // 赤経の補間（360度の折り返しを考慮）
-      let raDiff = targetViewCenter.ra - startViewCenter.ra;
-      if (raDiff > 180) raDiff -= 360;
-      if (raDiff < -180) raDiff += 360;
-      const newRA = (startViewCenter.ra + raDiff * easedProgress + 360) % 360;
-
-      // 赤緯とズームの補間
-      const newDec = startViewCenter.dec + (targetViewCenter.dec - startViewCenter.dec) * easedProgress;
-      const newZoom = startZoom + (targetZoom - startZoom) * easedProgress;
-
-      setViewCenter({ ra: newRA, dec: newDec });
-      setZoom(newZoom);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
+    const runSequence = async () => {
+      for (const step of focusProgram.steps) {
+        await animateToStep(step);
+        if (cancelled) return;
+        if (step.hold && step.hold > 0) {
+          await new Promise<void>((resolve) => {
+            holdTimeout = setTimeout(() => {
+              holdTimeout = null;
+              resolve();
+            }, step.hold);
+            if (cancelled) {
+              resolve();
+            }
+          });
+          if (cancelled) return;
+        }
+      }
+      if (!cancelled) {
+        onFocusSequenceComplete?.(focusProgram.id);
       }
     };
 
-    animate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizTarget]);
+    runSequence();
+
+    return () => {
+      cancelled = true;
+      if (focusAnimationRef.current) {
+        cancelAnimationFrame(focusAnimationRef.current);
+        focusAnimationRef.current = null;
+      }
+      if (holdTimeout) {
+        clearTimeout(holdTimeout);
+        holdTimeout = null;
+      }
+    };
+  }, [focusProgram, onFocusSequenceComplete]);
 
   // キャンバスサイズ調整
   useEffect(() => {
@@ -421,6 +516,23 @@ export default function StarField({
         }
       );
 
+      // 星座線を描画
+      if (showConstellationLines && constellationLines.length > 0) {
+        drawConstellationLines(
+          ctx,
+          constellationLines,
+          starIndex,
+          viewCenter,
+          zoom,
+          canvasSize.width,
+          canvasSize.height,
+          {
+            projectionMode,
+            observer: projectionMode === 'stereographic' ? TOKYO_OBSERVER : undefined,
+          }
+        );
+      }
+
       if (visibleCount !== visibleCountRef.current) {
         visibleCountRef.current = visibleCount;
         onVisibleCountChange?.(visibleCount);
@@ -438,6 +550,8 @@ export default function StarField({
     };
   }, [
     stars,
+    constellationLines,
+    starIndex,
     viewCenter,
     zoom,
     canvasSize,
@@ -446,6 +560,7 @@ export default function StarField({
     onCanvasSupportChange,
     labelOptions.showProperNames,
     labelOptions.showBayerDesignations,
+    showConstellationLines,
     milkyWayGlow,
   ]);
 

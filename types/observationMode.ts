@@ -8,8 +8,8 @@ export const OBSERVATION_MODE_LABELS = {
 } as const;
 
 export const OBSERVATION_MODE_DESCRIPTIONS = {
-  'naked-eye': '7等星まで（肉眼で見える星）',
-  'telescope': '9等星まで（望遠鏡で見える星・天の川）',
+  'naked-eye': '7等星まで表示',
+  'telescope': '9等星まで',
 } as const;
 
 export const OBSERVATION_MODE_ICONS = {

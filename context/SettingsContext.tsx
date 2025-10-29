@@ -20,6 +20,7 @@ const defaultSettings: SettingsState = {
   soundEnabled: true,
   showBayerDesignations: false,
   showProperNames: true,
+  showConstellationLines: true,
 };
 
 function sanitizeSettings(partial: Partial<SettingsState>): Partial<SettingsState> {
@@ -47,6 +48,10 @@ function sanitizeSettings(partial: Partial<SettingsState>): Partial<SettingsStat
 
   if (typeof partial.showProperNames === 'boolean') {
     next.showProperNames = partial.showProperNames;
+  }
+
+  if (typeof partial.showConstellationLines === 'boolean') {
+    next.showConstellationLines = partial.showConstellationLines;
   }
 
   return next;

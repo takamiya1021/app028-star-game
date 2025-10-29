@@ -41,6 +41,7 @@ export interface Settings {
   soundEnabled: boolean;         // 音声ON/OFF
   showBayerDesignations: boolean; // バイエル符号を表示
   showProperNames: boolean;       // 固有名を表示
+  showConstellationLines: boolean; // 星座線を表示
 }
 
 // スコアの型定義
