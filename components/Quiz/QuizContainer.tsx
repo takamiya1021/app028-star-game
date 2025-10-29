@@ -30,6 +30,7 @@ export function QuizContainer() {
   const ignoreResultRef = useRef(false);
 
   const lastResult = useMemo(() => history[history.length - 1], [history]);
+  const hasHistory = history.length > 0;
 
   // currentQuizが変わったらlastQuizTypeRefを更新
   useEffect(() => {
@@ -168,8 +169,10 @@ export function QuizContainer() {
 
       {status === 'idle' && (
         <div className="space-y-3 rounded-md border border-white/15 bg-white/5 p-3 text-sm text-blue-100">
-          <p className="font-semibold text-white">クイズは終了しました。</p>
-          <p>「新しいクイズを始める」を押すと、いつでも再開できます。</p>
+          <p className="font-semibold text-white">
+            {hasHistory ? 'クイズは終了しました。' : 'クイズに挑戦してみよう！'}
+          </p>
+          <p>{hasHistory ? '「新しいクイズを始める」を押すと、いつでも再開できます。' : '「新しいクイズを始める」を押すと、1問ずつ出題がスタートします。'}</p>
           <button
             type="button"
             onClick={() => loadQuiz()}
