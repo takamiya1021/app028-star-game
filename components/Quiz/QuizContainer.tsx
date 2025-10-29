@@ -21,7 +21,7 @@ export function QuizContainer() {
     reset,
   } = useQuiz();
 
-  const [status, setStatus] = useState<'loading' | 'ready' | 'answered' | 'error' | 'idle'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'answered' | 'error' | 'idle'>('idle');
   const [selectedChoice, setSelectedChoice] = useState<{ quizId: string; choice: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
@@ -107,11 +107,10 @@ export function QuizContainer() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    loadQuiz();
     return () => {
       isMountedRef.current = false;
     };
-  }, [loadQuiz]);
+  }, []);
 
   const handleSelect = useCallback(
     (choice: string) => {
